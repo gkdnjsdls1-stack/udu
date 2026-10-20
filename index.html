@@ -1,0 +1,1301 @@
+<title>우두국 입국관리소</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap">
+<style>
+/* 종이 위의 공문서. 한 열, 가운데 정렬, 여권 지면 비율을 기준으로 한 세로 리듬. */
+:root{
+  --paper:#FAF7F0;        /* 우두벌 백 */
+  --ink:#2B2B28;          /* 공문 묵색 */
+  --ink-soft:rgba(43,43,40,.72);
+  --ink-faint:rgba(43,43,40,.46);
+  --rule:rgba(43,43,40,.24);
+  --river:#16646B;        /* 양강 청록 */
+  --hill:#D9A85A;         /* 우두산 황토 */
+  --seal:#C1382B;         /* 입국 주인 — 도장에만 */
+  --grid:rgba(22,100,107,.055);
+  --surface:#FFFFFF;
+  --serif:"Noto Serif KR",'Nanum Myeongjo',Batang,'Times New Roman',serif;
+  --mono:ui-monospace,'Cascadia Mono',Consolas,'DejaVu Sans Mono',monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#1A1A18; --ink:#F2EFE7;
+    --ink-soft:rgba(242,239,231,.74); --ink-faint:rgba(242,239,231,.46);
+    --rule:rgba(242,239,231,.26);
+    --river:#4FA6AD; --hill:#E0B775;
+    --seal:#E8574A; --grid:rgba(79,166,173,.07);
+    --surface:#232320; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#1A1A18; --ink:#F2EFE7;
+  --ink-soft:rgba(242,239,231,.74); --ink-faint:rgba(242,239,231,.46);
+  --rule:rgba(242,239,231,.26);
+  --river:#4FA6AD; --hill:#E0B775;
+  --seal:#E8574A; --grid:rgba(79,166,173,.07);
+  --surface:#232320; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:var(--serif);
+  background-image:
+    repeating-linear-gradient(0deg,var(--grid) 0 1px,transparent 1px 16px),
+    repeating-linear-gradient(90deg,var(--grid) 0 1px,transparent 1px 16px);
+  -webkit-text-size-adjust:100%;
+}
+.wrap{
+  max-width:34rem; margin-inline:auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:1.75rem 3rem;
+}
+h1,h2,h3{margin:0;text-wrap:balance;font-weight:700}
+p{margin:0}
+.eyebrow{font-size:.72rem;letter-spacing:.34em;color:var(--ink-faint);text-transform:none}
+.rule{height:1px;background:var(--rule);border:0;margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{
+  display:block;width:100%;padding:.95rem 1rem;border:1.5px solid var(--ink);
+  background:transparent;border-radius:2px;font-weight:700;font-size:1.02rem;
+  letter-spacing:.06em;min-height:48px;
+}
+.btn:hover{background:var(--ink);color:var(--paper)}
+.btn-primary{background:var(--ink);color:var(--paper)}
+.btn-primary:hover{opacity:.86}
+.btn-quiet{border-color:var(--rule);font-weight:400;font-size:.9rem;letter-spacing:.04em}
+.btn:focus-visible,.opt:focus-visible,.lnk:focus-visible{outline:2px solid var(--river);outline-offset:3px}
+.lnk{background:none;border:0;padding:.4rem 0;text-decoration:underline;text-underline-offset:3px;font-size:.88rem;color:var(--ink-soft)}
+.stack{display:flex;flex-direction:column;gap:1.1rem}
+.stack-sm{display:flex;flex-direction:column;gap:.55rem}
+
+/* 국기 */
+.flag{display:block;height:auto}
+
+/* 랜딩 */
+.facts{display:grid;grid-template-columns:1fr auto;gap:.5rem 1rem;font-size:.92rem}
+.facts dt{color:var(--ink-soft)}
+.facts dd{margin:0;font-variant-numeric:tabular-nums;text-align:right}
+
+/* 심사 무대 */
+.stage{
+  position:relative;overflow:hidden;background:var(--surface);
+  border:1px solid var(--rule);border-radius:2px;
+  min-height:clamp(380px,62vh,520px);
+  display:flex;align-items:center;justify-content:center;
+  padding:1.5rem 1.1rem;text-align:center;
+}
+.stage.dark{background:var(--ink);color:var(--paper);border-color:transparent}
+.stage.dark .eyebrow{color:rgba(250,247,240,.6)}
+.surveyor{width:72px;height:72px;margin-inline:auto;display:block}
+.surveyor g{animation:spin 2.4s linear infinite;transform-origin:50% 50%}
+@keyframes spin{to{transform:rotate(360deg)}}
+.coord{font-family:var(--mono);font-size:.78rem;letter-spacing:.04em;opacity:.7}
+.dots span{animation:blink 1.2s infinite}
+.dots span:nth-child(2){animation-delay:.2s}
+.dots span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,100%{opacity:.25}50%{opacity:1}}
+
+/* 심사 질문 */
+.opt{
+  display:flex;width:100%;gap:.7rem;align-items:center;text-align:left;
+  padding:.85rem .9rem;border:1px solid var(--rule);background:transparent;
+  border-radius:2px;font-size:.95rem;min-height:48px;
+}
+.opt:hover{border-color:var(--ink)}
+.opt[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+.opt .mark{width:11px;height:11px;border:1px solid currentColor;border-radius:50%;flex:0 0 auto}
+.opt[aria-pressed="true"] .mark{background:currentColor}
+
+/* 도장 */
+.stamp-wrap{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.stamp-wrap.drop{animation:drop .18s cubic-bezier(.2,.9,.1,1) both}
+@keyframes drop{from{transform:translate(-50%,-50%) translateY(-42vh) scale(1.4);opacity:.88}to{transform:translate(-50%,-50%) translateY(0) scale(1);opacity:1}}
+.stage.shake{animation:shake .08s steps(2,end) 2}
+@keyframes shake{0%{transform:translate(0,0)}25%{transform:translate(-3px,1px)}75%{transform:translate(3px,-1px)}100%{transform:translate(0,0)}}
+.stamp{
+  position:relative;width:min(270px,78vw);aspect-ratio:3/2;
+  border:3px solid var(--seal);border-radius:5px;padding:7px;color:var(--seal);
+  transform:rotate(-8deg);
+  box-shadow:0 0 2px rgba(193,56,43,.45);
+}
+.stamp.bleed{animation:bleed .3s ease-out both}
+@keyframes bleed{to{box-shadow:0 0 5px 1px rgba(193,56,43,.42);transform:rotate(-8deg) scale(1.015);filter:blur(.35px)}}
+.stamp.exit{border-style:dashed}
+.stamp-in{
+  height:100%;border:1.5px solid var(--seal);border-radius:3px;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;position:relative;
+}
+.stamp.exit .stamp-in{border-style:dashed}
+.stamp-wm{position:absolute;bottom:-6%;right:-10%;width:72%;opacity:.12}
+.stamp-han{font-size:.78rem;letter-spacing:.44em;text-indent:.44em;position:relative}
+.stamp-big{font-size:clamp(2.1rem,11vw,2.9rem);font-weight:700;letter-spacing:.16em;text-indent:.16em;line-height:1.02;position:relative;text-shadow:0 0 1.5px rgba(193,56,43,.4)}
+.stamp-date{font-size:.95rem;letter-spacing:.16em;position:relative;font-variant-numeric:tabular-nums}
+.stamp-sub{font-size:.68rem;letter-spacing:.2em;opacity:.86;position:relative}
+
+/* 승인서 */
+.record{display:grid;grid-template-columns:auto 1fr;gap:.6rem 1.1rem;font-size:.95rem;text-align:left}
+.record dt{color:var(--ink-soft);white-space:nowrap}
+.record dd{margin:0;font-weight:700}
+.badge{border:1.5px solid var(--seal);padding:.6rem .8rem;border-radius:2px;text-align:left}
+.badge b{display:block;color:var(--seal);font-size:.98rem;letter-spacing:.04em}
+.badge span{display:block;font-size:.76rem;color:var(--seal);opacity:.85;margin-top:.2rem}
+
+/* 여권 홈 */
+.pp{background:var(--surface);border:1px solid var(--rule);border-radius:2px;padding:1.1rem}
+.pp-head{display:flex;gap:.9rem;align-items:flex-start}
+.photo{width:62px;height:78px;flex:0 0 auto;border:1px solid var(--rule);background:var(--grid);display:grid;place-items:end center;overflow:hidden}
+.photo svg{width:48px;height:48px}
+.meta{display:grid;gap:.45rem;min-width:0}
+.meta .k{font-size:.64rem;letter-spacing:.2em;color:var(--ink-faint)}
+.meta .v{font-size:.95rem;font-weight:700;overflow-wrap:anywhere}
+.grid-stamps{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.cell{aspect-ratio:1;border:1px dashed var(--rule);border-radius:2px;display:grid;place-items:center;font-size:.62rem;color:var(--ink-faint);padding:.2rem;text-align:center;line-height:1.3;white-space:pre-line}
+.cell.on{border:1.5px solid var(--seal);border-style:solid;color:var(--seal);font-weight:700}
+.mrz{font-family:var(--mono);font-size:.64rem;line-height:1.8;letter-spacing:.03em;color:var(--ink-soft);white-space:pre-line;overflow-x:auto}
+.rate{display:flex;justify-content:space-between;align-items:baseline;font-size:.9rem}
+.rate b{font-variant-numeric:tabular-nums}
+
+/* 카드 */
+.cardbox{background:var(--surface);border:1px solid var(--rule);padding:.6rem;border-radius:2px}
+.cardbox canvas{display:block;width:100%;height:auto}
+
+/* 모의 패널 */
+.sim{border:1px dashed var(--rule);border-radius:2px;padding:.8rem}
+.sim-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr));gap:.4rem}
+.sim-grid button{padding:.55rem .5rem;border:1px solid var(--rule);background:transparent;border-radius:2px;font-size:.78rem}
+.sim-grid button:hover{border-color:var(--ink)}
+.sim-grid button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+/* 미션 */
+.cat{border:1px solid var(--rule);border-radius:2px;overflow:hidden}
+.cat>button{display:flex;width:100%;align-items:center;gap:.7rem;padding:.85rem .9rem;background:transparent;border:0;text-align:left;min-height:48px}
+.cat>button:hover{background:var(--grid)}
+.cat h3{font-size:1rem;letter-spacing:.06em;flex:1 1 auto;min-width:0}
+.pips{display:flex;gap:4px;flex:0 0 auto}
+.pip{width:9px;height:9px;border:1px solid var(--ink-faint);border-radius:50%}
+.pip.on{background:var(--seal);border-color:var(--seal)}
+.chev{font-size:.8rem;color:var(--ink-faint);flex:0 0 auto}
+.mrow{display:flex;width:100%;gap:.7rem;align-items:flex-start;padding:.8rem .9rem;border:0;border-top:1px solid var(--rule);background:transparent;text-align:left;min-height:48px}
+.mrow:hover{background:var(--grid)}
+.mrow .num{font-size:.72rem;color:var(--ink-faint);width:1.6rem;flex:0 0 auto;font-variant-numeric:tabular-nums;padding-top:.2rem}
+.mrow .nm{font-weight:700;font-size:.95rem;display:block}
+.mrow .sub{font-size:.78rem;color:var(--ink-soft);display:block;margin-top:.2rem;line-height:1.5}
+.diff{font-size:.72rem;color:var(--hill);letter-spacing:.14em;flex:0 0 auto;padding-top:.25rem}
+.tag{display:inline-block;font-size:.66rem;letter-spacing:.12em;border:1px solid var(--rule);border-radius:999px;padding:.14rem .55rem;color:var(--ink-soft)}
+.tag.ok{border-color:var(--seal);color:var(--seal);font-weight:700}
+.script{font-size:.96rem;line-height:2.05}
+.script p{margin:0 0 1.15rem}
+.script p:last-child{margin-bottom:0}
+.script .q{padding-left:1rem;border-left:2px solid var(--rule)}
+.script .slot{color:var(--ink-faint);font-size:.86rem}
+.shots{display:flex;gap:.5rem;flex-wrap:wrap}
+.shots img{width:72px;height:72px;object-fit:cover;border:1px solid var(--rule);display:block}
+.filelbl{display:block;position:relative;width:100%;padding:.95rem 1rem;border:1.5px dashed var(--ink);border-radius:2px;text-align:center;font-weight:700;cursor:pointer;min-height:48px}
+.filelbl input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.numrow{display:flex;gap:.5rem}
+.numrow input{flex:1 1 auto;min-width:0;padding:.85rem .9rem;border:1.5px solid var(--ink);border-radius:2px;background:transparent;color:inherit;font:inherit;font-variant-numeric:tabular-nums}
+.numrow button{flex:0 0 auto;width:auto;padding-inline:1.2rem}
+.big{font-size:2.7rem;font-weight:700;font-variant-numeric:tabular-nums;text-align:center;letter-spacing:.02em;line-height:1.1}
+.note{font-size:.8rem;line-height:1.65;color:var(--ink-soft)}
+.foot{font-size:.72rem;color:var(--ink-faint);line-height:1.7;text-align:center}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){
+  .stamp-wrap.drop{animation:fade .2s ease-out both}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .stage.shake{animation:none}
+  .stamp.bleed{animation:none}
+  .surveyor g{animation:none}
+  .dots span{animation:none;opacity:.8}
+}
+</style>
+
+<div class="wrap" id="app"></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <path id="hillPath" d="M2 88C11 85 19 66 28 42 32 30 37 24 43 24 49 24 54 31 59 40 62 46 65 39 70 36 74 34 78 37 82 46 87 59 92 81 98 88Z"/>
+</defs></svg>
+
+<script>
+"use strict";
+
+/* ─────────────────────────────────────────────────────────────
+   설정 — 답사 후 채운다. 우두국-답사-체크리스트.md §7 참조.
+   boundary 가 null 이면 앱은 모의 모드로만 동작한다.
+   ───────────────────────────────────────────────────────────── */
+const CFG = {
+  boundary: null,            // [[lat,lng], ...] 시계방향
+  bufferM: 50,
+  checkinHours: [7, 21],     // 헌법 제11조
+  excluded: [],              // [{name, reason, center:[lat,lng], radiusM}]
+  rate: { officialMinPerGak: 15, seedObservations: [] }
+};
+
+const HILL = "M2 88C11 85 19 66 28 42 32 30 37 24 43 24 49 24 54 31 59 40 62 46 65 39 70 36 74 34 78 37 82 46 87 59 92 81 98 88Z";
+
+const ORIGINS = ["효자동","석사동","퇴계동","후평동","소양동","감자국 (춘천 시내)","국외"];
+
+const PURPOSES = ["관광","업무","귀국","기타"];
+
+const ROUTES = [
+  { id:"car",   label:"자가용 · 택시",            note:"기다리지 않았음", visa:"3급", name:"단기관광비자", bus:false, rank:1 },
+  { id:"100",   label:"100 · 100-1번",            note:"배차 40~120분",   visa:"2급", name:"관광비자",     bus:true,  rank:2 },
+  { id:"11-1",  label:"11-1번",                   note:"1일 16회",        visa:"1급", name:"체류비자",     bus:true,  rank:3 },
+  { id:"906",   label:"906번",                    note:"1일 2회",         visa:"특급", name:"외교관 여권", bus:true,  rank:6 },
+  { id:"walk",  label:"도보 · 자전거로 다리 통과", note:"헌법 제4조",      visa:"공훈", name:"월경자 越境者", bus:false, rank:5 }
+];
+
+const WAITS = [
+  { id:"w15", label:"15분 이내", min:10 },
+  { id:"w30", label:"30분 이내", min:25 },
+  { id:"w60", label:"1시간 이상", min:70 },
+  { id:"wno", label:"셔틀을 타지 못했음", min:null }
+];
+
+const SIM_CASES = [
+  { id:"ok",    label:"정상 입국" },
+  { id:"out",   label:"국경 밖" },
+  { id:"denied",label:"위치 권한 거부" },
+  { id:"forbid",label:"금지 구역" },
+  { id:"hours", label:"심사 시간 외" }
+];
+
+/* ─── 미션 20개 ─── 설정집 §6 */
+const MISSIONS = [
+  { id:1,  cat:"입국", stamp:"국경 통과",   desc:"다리를 건너 우두국에 입국한다.", verify:"auto", diff:1,
+    auto:p => p.entries.length > 0, how:"입국 심사를 받으면 자동으로 발급됩니다." },
+  { id:2,  cat:"입국", stamp:"월경 越境",   desc:"다리를 걸어서 또는 자전거로 건넌다.", verify:"auto", diff:3,
+    auto:p => p.entries.some(e => e.route === "walk"), how:"입국 심사에서 도보·자전거를 신고하십시오." },
+  { id:3,  cat:"입국", stamp:"국경 셔틀",   desc:"100번 버스로 입국한다. 배차 40~120분.", verify:"auto", diff:2,
+    auto:p => p.entries.some(e => e.route === "100"), how:"입국 심사에서 100번을 신고하십시오." },
+  { id:4,  cat:"입국", stamp:"외교 행낭",   desc:"906번으로 입국한다. 하루 두 번만 국경을 넘는다.", verify:"auto", diff:5,
+    auto:p => p.entries.some(e => e.route === "906"), how:"입국 심사에서 906번을 신고하십시오." },
+
+  { id:5,  cat:"국식", stamp:"국민 의례",   desc:"우두국에서 국을 먹는다. 헌법 제2조.", verify:"photo", need:1, diff:1 },
+  { id:6,  cat:"국식", stamp:"소머리 순례", desc:"순대국집 세 곳을 각기 다른 날에 방문한다.", verify:"photo", need:3, days:true, diff:3 },
+  { id:7,  cat:"국식", stamp:"국영 다방",   desc:"우두국 카페에서 커피를 마신다.", verify:"photo", need:1, diff:1 },
+  { id:8,  cat:"국식", stamp:"국식 물가",   desc:"국밥 가격을 신고해 국식 물가 지수에 기여한다.", verify:"won", unit:"원", ph:"9000", diff:1 },
+
+  { id:9,  cat:"국토", stamp:"최고봉 등정", desc:"우두산 정상에 오른다. 해발 133m, 국토 최고봉.", verify:"geo", diff:2 },
+  { id:10, cat:"국토", stamp:"양강 접수",   desc:"북한강과 소양강을 같은 날에 모두 방문한다.", verify:"geo", diff:2 },
+  { id:11, cat:"국토", stamp:"우두벌 일몰", desc:"일몰 시각 전후 30분에 우두벌에서 체크인한다.", verify:"geo", diff:3 },
+  { id:12, cat:"국토", stamp:"온수 저수지", desc:"우두저수지를 방문한다. 소양호에서 내려온 찬물을 데워 농업용수로 쓰는 시설이다.", verify:"geo", diff:2 },
+
+  { id:13, cat:"역사", stamp:"우두주",     desc:"우두동 유적 일대에서 해설을 듣는다.", verify:"geo", read:"m13", diff:2 },
+  { id:14, cat:"역사", stamp:"왕성",       desc:"우두성 추정지를 찾는다.", verify:"geo", read:"m14", diff:3,
+    warn:"추정지 위치가 아직 확인되지 않았습니다. 확인되지 않으면 이 과업은 폐기됩니다." },
+  { id:15, cat:"역사", stamp:"국호",       desc:"『삼국유사』의 우두주 기록을 읽는다.", verify:"read", read:"m15a", read2:"m15b", diff:1 },
+  { id:16, cat:"역사", stamp:"소머리",     desc:"우두산 능선에서 소머리 형태를 찾아 사진을 남긴다.", verify:"photo", need:1, read:"m16", diff:2 },
+
+  { id:17, cat:"생활", stamp:"할증 신고",   desc:"배달앱에서 우두국 배달비를 확인해 신고한다. 헌법 제6조.", verify:"won", unit:"원", ph:"4500", diff:1 },
+  { id:18, cat:"생활", stamp:"국경 검문소", desc:"“우두동” 표지판을 찾아 사진을 남긴다.", verify:"photo", need:1, diff:1 },
+  { id:19, cat:"생활", stamp:"환율 기여",   desc:"국경 셔틀을 기다리며 대기 시간을 측정해 신고한다.", verify:"timer", diff:2 },
+  { id:20, cat:"생활", stamp:"출국 심사",   desc:"다리를 건너 나가며 출국 도장을 받는다.", verify:"auto", diff:1,
+    auto:p => (p.exits || []).length > 0, pending:"출국 심사 화면은 아직 만들지 않았습니다." }
+];
+const CATS = ["입국","국식","국토","역사","생활"];
+
+/* ─── 역사 해설 자막 ─── 오디오는 2단계. 전문이 항상 화면에 있어야 한다 */
+const HISTORY = {
+  m13: { title:"우두주", sub:"우두동 유적", body:[
+    "지금 보이는 건 밭이거나 공터일 겁니다. 안내판이 없다면 아무 표시도 없을 수 있습니다.",
+    "이 자리에서 밭을 갈았던 흔적이 나왔습니다. 고랑과 두둑. 사람이 흙을 일정한 간격으로 밀어 올려 만든 자리입니다.",
+    "흙의 나이를 재는 방법이 있습니다. 광자극발광, 영어 약자로 OSL이라고 합니다. 흙 속의 작은 광물 알갱이는 땅에 묻히는 순간부터 주변의 방사선을 조금씩 쌓아둡니다. 그 알갱이에 빛을 쬐면 쌓인 양이 나오고, 그걸로 이 흙이 마지막으로 빛을 본 때를 알 수 있습니다.",
+    "말하자면 이 흙은 누군가 자기를 덮은 날을 기억하고 있었던 겁니다.",
+    { slot:"[연대 — 현장 안내판에서 확인해 채울 자리]" },
+    "여기서 농사를 지었다는 사실 말고는, 그 사람들에 대해 알려진 게 많지 않습니다. 이름도 모르고 몇 명이었는지도 모릅니다. 남은 건 밭의 모양뿐입니다.",
+    "지금 서 있는 땅이 그 밭입니다."
+  ]},
+  m14: { title:"왕성", sub:"우두성", body:[
+    "소양강 가에 흙으로 쌓은 성이 있었다고 합니다. 우두성입니다.",
+    "성이라고 하면 돌로 쌓은 담을 떠올리지만, 토성은 흙을 다져 올린 둑에 가깝습니다. 오래되면 그냥 언덕처럼 보입니다. 지금 눈앞에 뚜렷한 게 없다면, 그게 토성이 남는 방식입니다.",
+    "이 성을 왕이 살던 성으로 보는 견해가 있습니다. ‘우두’가 우두머리를 뜻한다는 풀이입니다.",
+    "다만 그 풀이가 널리 받아들여진 것은 아닙니다. 우두머리의 ‘우두’는 다른 말에서 왔다고 보는 설이 더 많습니다.",
+    "확실한 건 이 강가에 사람들이 모여 살았고, 흙을 쌓아 무언가를 둘렀다는 것입니다. 그게 왕의 성이었는지 마을을 지키는 둑이었는지는 아직 정해지지 않았습니다.",
+    "우두국은 이 성을 왕성이라고 주장하지 않습니다. 모르는 것은 모르는 대로 둡니다."
+  ]},
+  m15a: { title:"국호의 기원", sub:"1부 · 우두주", body:[
+    "『삼국유사』에 한 줄이 적혀 있습니다.",
+    { q:"춘주는 옛 우두주이며 옛 맥국이다." },
+    "춘주는 지금의 춘천입니다. 그러니까 춘천의 옛 이름이 우두주였습니다.",
+    "더 오래된 표기도 있습니다. 서기 637년 무렵의 기록에 우수, 또는 우두라는 이름이 보입니다. 우수와 우두는 둘 다 소머리를 뜻합니다. 그래서 원래 우리말 이름이 ‘소머리’였고, 그걸 한자로 옮기면서 우수 또는 우두가 됐다고 보는 견해가 있습니다.",
+    "소머리라는 이름은 이 땅에 솟은 언덕에서 왔습니다. 소머리를 닮았다고 해서 우두산입니다. 그 아래 들판이 우두벌이고, 그 들판의 이름이 동 이름이 되었습니다.",
+    "순서를 되짚으면 이렇습니다. 언덕이 있었고, 그 모양에서 이름이 나왔고, 그 이름이 한동안 춘천 전체의 이름이었습니다."
+  ]},
+  m15b: { title:"국호의 기원", sub:"2부 · 맥국", body:[
+    "우두주 앞에 또 하나의 이름이 있습니다. 맥국입니다.",
+    "조선시대에 만든 지리지들은 춘천을 옛 맥국의 도읍이라고 적었습니다. 옛 지도에는 맥국의 터라는 뜻의 ‘맥국허’라는 표기가 춘천 일대에 찍혀 있습니다. 신북읍 발산리 쪽을 왕궁 자리로 보는 견해도 있습니다.",
+    "다만 맥국이 어떤 나라였는지는 아직 정리되지 않았습니다. 언제 있었고 얼마나 컸는지를 두고 학설이 갈립니다.",
+    "고고학 조사로 소양강 유역에 큰 마을 유적들이 확인됐습니다. 그래서 하나의 왕국보다는 여러 마을이 느슨하게 묶인 형태였을 것으로 보는 쪽이 있습니다.",
+    "전해지는 이야기도 있습니다. 팽오라는 사람이 단군왕검의 명을 받아 물길을 뚫었고, 맥국 사람들이 그를 기려 우두주에 비석을 세웠다는 것입니다.",
+    "그 비석은 아직 발견되지 않았습니다.",
+    "여기까지가 기록과 전승입니다. 어디까지가 사실인지는 아직 아무도 모릅니다."
+  ]},
+  m16: { title:"소머리", sub:"우두산", body:[
+    "저 언덕이 우두산입니다. 해발 133미터. 평지에 하나만 솟아 있습니다.",
+    "소머리를 닮았다고 해서 붙은 이름입니다. 누가 언제 처음 그렇게 불렀는지는 기록이 없습니다. 다만 그 비유가 땅의 이름이 되고, 한동안 춘천 전체의 이름이 됐습니다.",
+    "지금 보이는 능선을 보십시오. 한쪽이 높고, 한 번 내려갔다가, 낮게 한 번 더 솟습니다.",
+    "그 두 번째 솟은 데가 주둥이라고 생각하면, 앞의 높은 쪽이 머리입니다.",
+    "보이지 않아도 괜찮습니다. 천 년 전 사람들이 어느 자리에서 봤는지 우리는 모릅니다.",
+    "찾으려면 걸어서 각도를 바꿔 보십시오."
+  ]}
+};
+
+/* ── 저장 ── */
+const KEY = "udu.passport.v1";
+function norm(p){
+  p.entries = p.entries || []; p.exits = p.exits || [];
+  p.waits = p.waits || []; p.bestRank = p.bestRank || 0;
+  p.done = p.done || {}; p.shots = p.shots || {}; p.nums = p.nums || {};
+  p.timer = p.timer || null;
+  return p;
+}
+function load(){ try{ const r = localStorage.getItem(KEY); return r ? norm(JSON.parse(r)) : null; }catch(e){ return null; } }
+function save(p){ try{ localStorage.setItem(KEY, JSON.stringify(p)); }catch(e){} }
+
+/* ── 사진 — 기기에만 저장한다. 서버로 보내지 않는다 ── */
+let IDB = null;
+function idb(){
+  return new Promise(res => {
+    if(IDB) return res(IDB);
+    try{
+      const q = indexedDB.open("udu", 1);
+      q.onupgradeneeded = () => { try{ q.result.createObjectStore("shots"); }catch(e){} };
+      q.onsuccess = () => { IDB = q.result; res(IDB); };
+      q.onerror = () => res(null);
+    }catch(e){ res(null); }
+  });
+}
+function putShot(key, blob){
+  return idb().then(d => d && new Promise(r => {
+    try{ const t = d.transaction("shots","readwrite");
+      t.objectStore("shots").put(blob, key);
+      t.oncomplete = () => r(true); t.onerror = () => r(false);
+    }catch(e){ r(false); }
+  }));
+}
+function getShot(key){
+  return idb().then(d => d && new Promise(r => {
+    try{ const t = d.transaction("shots","readonly");
+      const q = t.objectStore("shots").get(key);
+      q.onsuccess = () => r(q.result || null); q.onerror = () => r(null);
+    }catch(e){ r(null); }
+  }));
+}
+function shrink(file, max){
+  max = max || 480;
+  return new Promise(res => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const s = Math.min(1, max/Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.max(1, Math.round(img.width*s));
+      c.height = Math.max(1, Math.round(img.height*s));
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      c.toBlob(b => res(b), "image/jpeg", .72);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); res(null); };
+    img.src = url;
+  });
+}
+
+/* ── 미션 판정 ── */
+function geoReady(){ return !!CFG.boundary; }
+function distinctDays(list){
+  const set = {};
+  (list||[]).forEach(s => { set[(s.at||"").slice(0,10)] = 1; });
+  return Object.keys(set).length;
+}
+function mDone(m){
+  const p = S.pp; if(!p) return false;
+  switch(m.verify){
+    case "auto":  return m.auto ? !!m.auto(p) : false;
+    case "photo": {
+      const l = p.shots[m.id] || [];
+      return m.days ? distinctDays(l) >= (m.need||1) : l.length >= (m.need||1);
+    }
+    case "won":   return typeof p.nums[m.id] === "number";
+    default:      return !!p.done[m.id];
+  }
+}
+function doneCount(){ return MISSIONS.filter(mDone).length; }
+function catList(c){ return MISSIONS.filter(m => m.cat === c); }
+function stars(n){ return "★".repeat(n); }
+
+/* ── 상태 ── */
+const S = {
+  screen: "border",
+  pp: load(),
+  sim: !CFG.boundary,
+  simCase: "ok",
+  draft: { origin: ORIGINS[0] },
+  ctl: null,
+  lastEntry: null
+};
+
+/* ── 유틸 ── */
+const pad = (n,l=2) => String(n).padStart(l,"0");
+const now = () => new Date();
+function dateStr(d){ return `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())}`; }
+function timeStr(d){ return `${pad(d.getMonth()+1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+function el(tag, attrs, kids){
+  const n = document.createElement(tag);
+  if(attrs) for(const k in attrs){
+    const v = attrs[k];
+    if(v == null) continue;
+    if(k === "class") n.className = v;
+    else if(k === "html") n.innerHTML = v;
+    else if(k === "text") n.textContent = v;
+    else if(k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v);
+  }
+  (kids||[]).forEach(c => c && n.appendChild(c));
+  return n;
+}
+function flagSVG(w){
+  const h = Math.round(w*2/3);
+  return `<svg class="flag" width="${w}" height="${h}" viewBox="0 0 540 360" role="img"
+    aria-label="우두국 국기 양강기. 좌우 청록 띠는 서쪽 북한강과 동쪽 소양강, 가운데 흰 우두벌 위에 황토색 우두산이 솟아 있다.">
+    <rect width="540" height="360" fill="var(--paper)"/>
+    <rect width="108" height="360" fill="var(--river)"/>
+    <rect x="432" width="108" height="360" fill="var(--river)"/>
+    <path d="${HILL}" transform="translate(101.25 63) scale(3.375)" fill="var(--hill)"/>
+  </svg>`;
+}
+function hillWM(){
+  return `<svg class="stamp-wm" viewBox="0 0 100 70" aria-hidden="true">
+    <path d="${HILL}" transform="translate(0 -20)" fill="currentColor"/></svg>`;
+}
+
+/* ── 소리 ── 외부 파일 없이 도장 타격음을 합성한다 */
+let AC = null;
+function audio(){
+  try{
+    if(!AC){ const C = window.AudioContext || window.webkitAudioContext; if(!C) return null; AC = new C(); }
+    if(AC.state === "suspended") AC.resume();
+    return AC;
+  }catch(e){ return null; }
+}
+function thunk(){
+  const ac = audio(); if(!ac) return;
+  const t = ac.currentTime;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = "sine";
+  o.frequency.setValueAtTime(150, t);
+  o.frequency.exponentialRampToValueAtTime(46, t+0.13);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.5, t+0.006);
+  g.gain.exponentialRampToValueAtTime(0.0001, t+0.17);
+  o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+0.19);
+
+  const len = Math.floor(ac.sampleRate*0.05);
+  const buf = ac.createBuffer(1, len, ac.sampleRate);
+  const d = buf.getChannelData(0);
+  for(let i=0;i<len;i++) d[i] = (Math.random()*2-1)*Math.pow(1-i/len, 3);
+  const n = ac.createBufferSource(); n.buffer = buf;
+  const bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 1700; bp.Q.value = .7;
+  const ng = ac.createGain(); ng.gain.value = .2;
+  n.connect(bp); bp.connect(ng); ng.connect(ac.destination); n.start(t);
+}
+function buzz(){ try{ navigator.vibrate && navigator.vibrate(60); }catch(e){} }
+
+/* ── 위치 ── 배포 환경에서는 실제 GPS, 아티팩트 뷰어에서는 거부되어 모의로 떨어진다 */
+function locate(){
+  return new Promise(res => {
+    if(!navigator.geolocation) return res({ ok:false, code:"unsupported" });
+    let done = false;
+    const t = setTimeout(() => { if(!done){ done = true; res({ ok:false, code:"timeout" }); } }, 6000);
+    try{
+      navigator.geolocation.getCurrentPosition(
+        p => { if(done) return; done = true; clearTimeout(t);
+               res({ ok:true, lat:p.coords.latitude, lng:p.coords.longitude, acc:p.coords.accuracy }); },
+        e => { if(done) return; done = true; clearTimeout(t);
+               res({ ok:false, code: e && e.code === 1 ? "denied" : "unavailable" }); },
+        { enableHighAccuracy:true, timeout:5500, maximumAge:30000 }
+      );
+    }catch(e){ if(!done){ done = true; clearTimeout(t); res({ ok:false, code:"unsupported" }); } }
+  });
+}
+function withinHours(d){
+  const h = d.getHours();
+  return h >= CFG.checkinHours[0] && h < CFG.checkinHours[1];
+}
+
+/* ── 환율 — 시간본위제 ── */
+function gak(){
+  const obs = (S.pp && S.pp.waits || []).concat(CFG.rate.seedObservations).filter(n => typeof n === "number");
+  if(!obs.length) return { min: CFG.rate.officialMinPerGak, seeded:false };
+  const s = obs.slice().sort((a,b) => a-b);
+  const mid = s.length % 2 ? s[(s.length-1)/2] : Math.round((s[s.length/2-1]+s[s.length/2])/2);
+  return { min: Math.max(1, mid), seeded:true };
+}
+
+/* ── 여권 ── */
+function issue(origin){
+  const d = now();
+  return norm({
+    no: `UDU-${d.getFullYear()}-${pad(Math.floor(Math.random()*9000)+1000,4)}`,
+    origin, issued: d.toISOString(),
+    founding: true             // 제1기 국경 통과자 — 소양8교 개통 전
+  });
+}
+const ROM = {
+  "효자동":"HYOJA","석사동":"SEOKSA","퇴계동":"TOEGYE","후평동":"HUPYEONG",
+  "소양동":"SOYANG","감자국 (춘천 시내)":"GAMJAGUK","국외":"FOREIGN"
+};
+const ROM_VISA = {
+  "단기관광비자":"TOURIST","관광비자":"TOURIST","체류비자":"RESIDENT",
+  "외교관 여권":"DIPLOMAT","월경자 越境者":"WOLGYEONGJA","미발급":"NONE"
+};
+function mrz(pp){
+  const base = ROM[pp.origin] || "SOMEORIGOL";
+  const vis = ROM_VISA[currentVisa(pp).name] || "VISITOR";
+  const l1 = ("P<UDU" + base + "<<" + vis).padEnd(40,"<").slice(0,40);
+  const l2 = (pp.no.replace(/-/g,"") + "<2UDU").padEnd(38,"<").slice(0,38) + pad(pp.entries.length);
+  return l1 + "\n" + l2;
+}
+function currentVisa(pp){
+  if(!pp || !pp.entries.length) return { visa:"—", name:"미발급" };
+  const best = ROUTES.filter(r => r.rank === pp.bestRank)[0];
+  return best ? { visa:best.visa, name:best.name } : { visa:"3급", name:"단기관광비자" };
+}
+
+/* ─────────────────────────────────────────────────────────────
+   화면
+   ───────────────────────────────────────────────────────────── */
+function render(){
+  if(S.tick){ clearInterval(S.tick); S.tick = null; }
+  const app = document.getElementById("app");
+  app.textContent = "";
+  const fns = { border:scrBorder, issue:scrIssue, control:scrControl,
+                passport:scrPassport, card:scrCard, missions:scrMissions, mission:scrMission };
+  (fns[S.screen] || scrBorder)(app);
+  app.appendChild(footer());
+}
+function go(s){ S.screen = s; render(); window.scrollTo(0,0); }
+
+function footer(){
+  return el("p",{ class:"foot", style:"margin-top:2.2rem",
+    html:"우두국은 춘천시와 무관한 비공식 창작물입니다." });
+}
+
+/* S1 — 국경 */
+function scrBorder(root){
+  root.appendChild(el("div",{ class:"stack" },[
+    el("div",{ style:"text-align:center", html:flagSVG(132) }),
+    el("div",{ style:"text-align:center" },[
+      el("h1",{ style:"font-size:clamp(2.4rem,13vw,3.1rem);letter-spacing:.2em;text-indent:.2em;line-height:1.1", text:"우두국" }),
+      el("p",{ class:"eyebrow", style:"margin-top:.7rem", text:"牛頭國 · REPUBLIC OF UDU" })
+    ]),
+    el("p",{ style:"text-align:center;font-size:1.02rem;line-height:1.85",
+             text:"다리를 건너야 들어올 수 있는 나라." }),
+    el("hr",{ class:"rule" }),
+    el("dl",{ class:"facts" },[
+      el("dt",{ text:"인구" }), el("dd",{ text:"18,085명" }),
+      el("dt",{ text:"면적" }), el("dd",{ text:"4.29㎢" }),
+      el("dt",{ text:"최고봉" }), el("dd",{ text:"우두산 133m" }),
+      el("dt",{ text:"국경 셔틀 배차" }), el("dd",{ text:"40~120분" }),
+      el("dt",{ text:"906번 운행" }), el("dd",{ text:"1일 2회" })
+    ]),
+    el("hr",{ class:"rule" }),
+    S.pp
+      ? el("button",{ class:"btn btn-primary", onclick:()=>go("passport"), text:"여권 열기" })
+      : el("button",{ class:"btn btn-primary", onclick:()=>go("issue"), text:"여권 발급받기" }),
+    S.pp ? null : el("p",{ class:"note", style:"text-align:center",
+        text:"발급은 즉시 끝납니다. 사진은 넣지 않아도 됩니다." })
+  ]));
+}
+
+/* S2 — 여권 발급 */
+function scrIssue(root){
+  const sel = el("div",{ class:"stack-sm" });
+  ORIGINS.forEach(o => {
+    const b = el("button",{ class:"opt", "aria-pressed": String(S.draft.origin === o),
+      onclick:()=>{ S.draft.origin = o; render(); } },[
+      el("span",{ class:"mark" }), el("span",{ text:o })
+    ]);
+    sel.appendChild(b);
+  });
+  root.appendChild(el("div",{ class:"stack" },[
+    el("p",{ class:"eyebrow", text:"우두국 입국관리소" }),
+    el("h2",{ style:"font-size:1.45rem;letter-spacing:.04em", text:"여권 발급" }),
+    el("hr",{ class:"rule" }),
+    el("p",{ class:"note", text:"출신국을 신고하십시오. 여권번호는 발급 시 자동으로 부여됩니다." }),
+    sel,
+    el("button",{ class:"btn btn-primary", onclick:()=>{
+      S.pp = issue(S.draft.origin); save(S.pp); go("passport");
+    }, text:"발급" }),
+    el("button",{ class:"lnk", onclick:()=>go("border"), text:"돌아가기" })
+  ]));
+}
+
+/* S3 — 입국 심사 */
+function scrControl(root){
+  const c = S.ctl;
+  const stage = el("div",{ class:"stage" + (c.phase === "locating" || c.phase === "processing" ? " dark" : ""), id:"stage" });
+  const live = el("p",{ class:"sr", id:"live", "aria-live":"assertive", role:"status" });
+
+  if(c.phase === "locating"){
+    stage.appendChild(el("div",{ class:"stack-sm" },[
+      el("div",{ html:`<svg class="surveyor" viewBox="0 0 100 100" aria-hidden="true"><g>
+        <path d="M50 10 L50 90 M10 50 L90 50" stroke="rgba(250,247,240,.35)" stroke-width="1"/>
+        <circle cx="50" cy="50" r="34" fill="none" stroke="rgba(250,247,240,.5)" stroke-width="1.5"/>
+        <path d="M50 16 L58 28 L42 28 Z" fill="#FAF7F0"/></g></svg>` }),
+      el("p",{ style:"letter-spacing:.3em;font-size:.98rem;margin-top:.8rem", text:"국경 위치 확인 중" })
+    ]));
+  }
+  else if(c.phase === "verdict"){
+    stage.appendChild(el("div",{ class:"stack-sm" },[
+      el("p",{ class:"eyebrow", text:"국경 측량 완료" }),
+      el("p",{ style:"font-size:1.3rem;font-weight:700;letter-spacing:.06em", text:c.place }),
+      el("hr",{ class:"rule", style:"margin:.6rem auto;width:5rem" }),
+      el("p",{ class:"coord", text:c.coord })
+    ]));
+  }
+  else if(c.phase === "q1" || c.phase === "q2"){
+    const isQ1 = c.phase === "q1";
+    const box = el("div",{ class:"stack", style:"width:100%;text-align:left" });
+    box.appendChild(el("div",{ style:"text-align:center" },[
+      el("p",{ class:"eyebrow", text:`심사 ${isQ1?1:2} / 2` }),
+      el("p",{ style:"font-size:1.12rem;font-weight:700;margin-top:.7rem;line-height:1.6",
+               text: isQ1 ? "방문 목적을 신고하십시오." : "입국 경로를 신고하십시오." })
+    ]));
+    const list = el("div",{ class:"stack-sm" });
+    if(isQ1){
+      PURPOSES.forEach(p => list.appendChild(el("button",{ class:"opt",
+        "aria-pressed":String(c.purpose === p),
+        onclick:()=>{ c.purpose = p; c.phase = "q2"; render(); } },
+        [el("span",{ class:"mark" }), el("span",{ text:p })])));
+    } else {
+      ROUTES.forEach(r => list.appendChild(el("button",{ class:"opt",
+        "aria-pressed":String(c.route && c.route.id === r.id),
+        onclick:()=>{ c.route = r; c.wait = null; if(!r.bus){ submit(); } else render(); } },[
+        el("span",{ class:"mark" }),
+        el("span",{ style:"min-width:0" },[
+          el("span",{ style:"display:block;font-weight:700", text:r.label }),
+          el("span",{ style:"display:block;font-size:.78rem;opacity:.72;margin-top:.15rem", text:r.note })
+        ])
+      ])));
+    }
+    box.appendChild(list);
+    if(!isQ1 && c.route && c.route.bus){
+      box.appendChild(el("hr",{ class:"rule" }));
+      box.appendChild(el("p",{ style:"font-size:.98rem;font-weight:700", text:"국경 셔틀 대기 시간" }));
+      const wl = el("div",{ class:"stack-sm" });
+      WAITS.forEach(w => wl.appendChild(el("button",{ class:"opt",
+        "aria-pressed":String(c.wait && c.wait.id === w.id),
+        onclick:()=>{ c.wait = w; submit(); } },
+        [el("span",{ class:"mark" }), el("span",{ text:w.label })])));
+      box.appendChild(wl);
+    }
+    stage.appendChild(box);
+  }
+  else if(c.phase === "processing"){
+    stage.appendChild(el("div",{},[
+      el("p",{ style:"letter-spacing:.5em;font-size:1.2rem;font-weight:700", text:"심사 중" }),
+      el("p",{ class:"dots", style:"letter-spacing:.5em;margin-top:.6rem",
+               html:"<span>·</span><span>·</span><span>·</span>" })
+    ]));
+  }
+  else if(c.phase === "stamp"){
+    const wrap = el("div",{ class:"stamp-wrap", id:"swrap" });
+    wrap.appendChild(stampEl(c.route, c.date, false));
+    stage.appendChild(wrap);
+  }
+  else if(c.phase === "approved"){
+    stage.appendChild(el("div",{ style:"width:100%;display:flex;justify-content:center" },[
+      el("div",{ style:"transform:scale(.82);transform-origin:center" },[ stampEl(c.route, c.date, false) ])
+    ]));
+  }
+  else if(c.phase === "fail"){
+    stage.appendChild(el("div",{ class:"stack", style:"text-align:left;width:100%" },[
+      el("p",{ class:"eyebrow", style:"text-align:center", text:"심사 불가" }),
+      el("p",{ style:"font-size:1.08rem;font-weight:700;line-height:1.6;text-align:center", text:c.failTitle }),
+      el("hr",{ class:"rule" }),
+      el("p",{ class:"note", text:c.failBody })
+    ]));
+  }
+
+  root.appendChild(el("div",{ class:"stack" },[ live, stage ]));
+
+  if(c.phase === "approved"){
+    const r = c.route, v = { visa:r.visa, name:r.name };
+    root.appendChild(el("div",{ class:"stack", style:"margin-top:1.1rem" },[
+      el("p",{ class:"eyebrow", text:"입국 승인서" }),
+      el("dl",{ class:"record" },[
+        el("dt",{ text:"여권번호" }), el("dd",{ text:S.pp.no }),
+        el("dt",{ text:"입국일시" }), el("dd",{ text:timeStr(c.date) }),
+        el("dt",{ text:"입국경로" }), el("dd",{ text:r.label }),
+        el("dt",{ text:"발급비자" }), el("dd",{ text:`${v.visa} · ${v.name}` }),
+        el("dt",{ text:"방문목적" }), el("dd",{ text:c.purpose || "—" })
+      ]),
+      S.pp.founding ? el("div",{ class:"badge" },[
+        el("b",{ text:"제1기 국경 통과자" }),
+        el("span",{ text:"소양8교 개통 이후 발급되지 않습니다" })
+      ]) : null,
+      c.wait && c.wait.min != null ? el("p",{ class:"note",
+        text:`셔틀 대기 ${c.wait.min}분이 신고되었습니다. 오늘의 1각은 ${gak().min}분입니다.` }) : null,
+      el("button",{ class:"btn btn-primary", onclick:()=>go("card"), text:"공유 카드 만들기" }),
+      el("button",{ class:"btn btn-quiet", onclick:()=>go("passport"), text:"여권 보기" })
+    ]));
+  }
+  if(c.phase === "fail"){
+    root.appendChild(el("div",{ class:"stack", style:"margin-top:1.1rem" },[
+      el("button",{ class:"btn", onclick:()=>startControl(), text:"다시 신고" }),
+      el("button",{ class:"btn btn-quiet", onclick:()=>go("passport"), text:"여권으로" })
+    ]));
+  }
+}
+
+function stampEl(route, d, exit){
+  const s = el("div",{ class:"stamp" + (exit ? " exit" : ""), id:"stamp" });
+  s.appendChild(el("div",{ class:"stamp-in" },[
+    el("div",{ html:hillWM() }),
+    el("div",{ class:"stamp-han", text:"牛頭國" }),
+    el("div",{ class:"stamp-big", text: exit ? "출국" : "입국" }),
+    el("div",{ class:"stamp-date", text:dateStr(d) }),
+    el("div",{ class:"stamp-sub", text: route ? route.label : "소양2교" })
+  ]));
+  return s;
+}
+
+/* 심사 진행 */
+function startControl(){
+  audio();                                   // 사용자 제스처 안에서 오디오 잠금 해제
+  S.ctl = { phase:"locating", date: now(), purpose:null, route:null, wait:null };
+  go("control");
+  runControl();
+}
+async function runControl(){
+  const c = S.ctl;
+  say("국경 위치를 확인하고 있습니다.");
+
+  const [res] = await Promise.all([ locate(), sleep(1500) ]);   // 최소 1.5초
+  const sim = S.sim ? S.simCase : "ok";
+
+  if(sim === "hours" || !withinHours(c.date)){
+    return fail("심사 시간이 아닙니다.",
+      "국경 심사는 07시부터 21시까지 진행됩니다. 헌법 제11조에 따라, 밤에는 국민이 잠듭니다.");
+  }
+  if(sim === "denied" || (!S.sim && !res.ok && res.code === "denied")){
+    return fail("위치 확인이 거부되었습니다.",
+      "국경 심사는 위치 확인 없이 진행할 수 없습니다. 헌법 제4조에 따라, 다리를 건넌 사실만이 입국을 증명합니다.");
+  }
+  if(sim === "out"){
+    return fail("귀하는 현재 우두국 영토 밖에 있습니다.",
+      "국경을 넘은 뒤 다시 신고하십시오. 가장 가까운 검문소는 소양2교입니다.");
+  }
+  if(sim === "forbid"){
+    return fail("해당 구역에서는 도장을 발급하지 않습니다.",
+      "이곳은 국민의 주거지입니다. 헌법 제12조에 따라, 국민의 현관은 국경보다 엄격합니다.");
+  }
+  if(!S.sim && !res.ok){
+    return fail("국경 측량에 실패했습니다.", "잠시 후 다시 신고하십시오.");
+  }
+
+  c.coord = res.ok ? `${res.lat.toFixed(6)}, ${res.lng.toFixed(6)}`
+                   : "좌표 미확인 · 모의 측량";
+  c.place = "소양2교 통과 확인";
+  c.phase = "verdict"; render();
+  say(c.place);
+
+  await sleep(1500);
+  c.phase = "q1"; render();
+}
+function fail(title, body){
+  const c = S.ctl;
+  c.phase = "fail"; c.failTitle = title; c.failBody = body;
+  render(); say(title + " " + body);
+}
+function say(t){
+  const n = document.getElementById("live");
+  if(n) n.textContent = t;
+}
+
+async function submit(){
+  const c = S.ctl;
+  c.phase = "processing"; render();
+  say("심사 중입니다.");
+  await sleep(1200);                          // 고정 지연 — 즉시 통과시키면 도장이 싸진다
+
+  c.phase = "stamp"; render();
+  const wrap = document.getElementById("swrap");
+  const stamp = document.getElementById("stamp");
+  const stage = document.getElementById("stage");
+  if(wrap) wrap.classList.add("drop");
+
+  setTimeout(() => {                          // 180ms — 접촉
+    thunk(); buzz();
+    if(stage) stage.classList.add("shake");
+    if(stamp) stamp.classList.add("bleed");
+    const v = `${c.route.visa} ${c.route.name}`;
+    say(`입국 도장이 발급되었습니다. ${v}.`);
+  }, 180);
+
+  await sleep(3000);                           // 도장 3초
+
+  const e = {
+    at: c.date.toISOString(), route: c.route.id,
+    visa: c.route.visa, name: c.route.name, purpose: c.purpose,
+    wait: c.wait ? c.wait.min : null
+  };
+  S.pp.entries.push(e);
+  if(c.wait && c.wait.min != null) S.pp.waits.push(c.wait.min);
+  S.pp.bestRank = Math.max(S.pp.bestRank || 0, c.route.rank);
+  save(S.pp);
+  S.lastEntry = e;
+
+  c.phase = "approved"; render();
+}
+
+/* S4 — 여권 홈 */
+function scrPassport(root){
+  const pp = S.pp;
+  if(!pp) return go("border");
+  const v = currentVisa(pp);
+  const g = gak();
+
+  const cells = el("div",{ class:"grid-stamps" });
+  for(let i=0;i<8;i++){
+    const e = pp.entries[i];
+    cells.appendChild(el("div",{ class:"cell" + (e ? " on" : "") },
+      e ? [ el("span",{ text:`${dateStr(new Date(e.at)).slice(5)}\n${e.visa}` }) ]
+        : [ el("span",{ text:"—" }) ]));
+  }
+
+  root.appendChild(el("div",{ class:"stack" },[
+    el("div",{ style:"display:flex;align-items:center;gap:.7rem" },[
+      el("div",{ html:flagSVG(46) }),
+      el("div",{},[
+        el("p",{ style:"font-size:1.05rem;font-weight:700;letter-spacing:.18em", text:"우두국 여권" }),
+        el("p",{ class:"eyebrow", style:"margin-top:.25rem", text:"PASSPORT" })
+      ])
+    ]),
+    el("hr",{ class:"rule" }),
+
+    el("div",{ class:"pp" },[
+      el("div",{ class:"pp-head" },[
+        el("div",{ class:"photo", html:`<svg viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="34" r="19" fill="rgba(43,43,40,.22)"/>
+          <path d="M12 100C12 78 29 62 50 62C71 62 88 78 88 100Z" fill="rgba(43,43,40,.22)"/></svg>` }),
+        el("div",{ class:"meta" },[
+          el("div",{},[ el("p",{ class:"k", text:"여권번호 / NO." }), el("p",{ class:"v", text:pp.no }) ]),
+          el("div",{},[ el("p",{ class:"k", text:"출신국 / ORIGIN" }), el("p",{ class:"v", text:pp.origin }) ]),
+          el("div",{},[ el("p",{ class:"k", text:"비자 / VISA" }),
+                        el("p",{ class:"v", style:"color:var(--river)", text:`${v.visa} · ${v.name}` }) ])
+        ])
+      ]),
+      el("hr",{ class:"rule", style:"margin:.9rem 0" }),
+      el("p",{ class:"mrz", text:mrz(pp) })
+    ]),
+
+    el("p",{ class:"eyebrow", text:`입국 기록 ${pp.entries.length}` }),
+    cells,
+
+    el("hr",{ class:"rule" }),
+    el("div",{ class:"rate" },[
+      el("span",{ text:"오늘의 1각" }),
+      el("b",{ text:`${g.min}분${g.seeded ? "" : " (공식)"}` })
+    ]),
+    el("p",{ class:"note", text: g.seeded
+      ? "신고된 대기 시간의 중간값입니다. 길어지면 화폐 가치가 떨어집니다."
+      : "아직 신고가 없어 공식 환율을 표시합니다. 셔틀 대기 시간을 신고하면 갱신됩니다." }),
+
+    el("hr",{ class:"rule" }),
+    el("button",{ class:"btn btn-primary", onclick:startControl, text:"입국 심사 받기" }),
+    el("button",{ class:"btn", onclick:()=>go("missions"),
+      text:`국가 과업  ${doneCount()} / ${MISSIONS.length}` }),
+    pp.entries.length ? el("button",{ class:"btn btn-quiet", onclick:()=>go("card"), text:"공유 카드" }) : null,
+    el("button",{ class:"lnk", onclick:()=>go("border"), text:"국경으로" }),
+
+    S.sim ? simPanel() : null
+  ]));
+}
+
+function simPanel(){
+  const grid = el("div",{ class:"sim-grid" });
+  SIM_CASES.forEach(c => grid.appendChild(el("button",{
+    "aria-pressed": String(S.simCase === c.id),
+    onclick:()=>{ S.simCase = c.id; render(); }, text:c.label })));
+  return el("div",{ class:"sim" },[
+    el("p",{ class:"eyebrow", text:"모의 모드" }),
+    el("p",{ class:"note", style:"margin:.6rem 0 .8rem",
+      html:"지오펜스 좌표가 아직 비어 있어 실제 국경 판정을 하지 않습니다. 답사 후 <b>CFG.boundary</b>를 채우면 모의 모드가 꺼집니다. 아래로 심사 분기를 강제할 수 있습니다." }),
+    grid,
+    el("button",{ class:"lnk", style:"margin-top:.6rem", onclick:()=>{
+      try{ localStorage.removeItem(KEY); }catch(e){}
+      S.pp = null; go("border");
+    }, text:"여권 분실 신고 (초기화)" })
+  ]);
+}
+
+/* S7 — 공유 카드 */
+function scrCard(root){
+  const box = el("div",{ class:"cardbox" });
+  const cv = el("canvas",{ width:1080, height:1350, role:"img",
+    "aria-label":"우두국 입국 카드. 입국 도장과 체류 기록이 담긴 공유용 이미지." });
+  box.appendChild(cv);
+
+  const actions = el("div",{ class:"stack", style:"margin-top:1.1rem" });
+  root.appendChild(el("div",{ class:"stack" },[
+    el("p",{ class:"eyebrow", text:"공유 카드" }),
+    box,
+    actions,
+    el("button",{ class:"lnk", onclick:()=>go("passport"), text:"여권으로" })
+  ]));
+
+  drawCard(cv).then(() => {
+    actions.appendChild(el("button",{ class:"btn btn-primary", onclick:()=>shareCard(cv), text:"공유하기" }));
+    actions.appendChild(el("p",{ class:"note", id:"shareNote",
+      text:"기기에서 공유나 저장이 막혀 있으면 길게 눌러 이미지를 저장할 수 있습니다." }));
+  });
+}
+
+async function drawCard(cv){
+  const x = cv.getContext("2d");
+  const cs = getComputedStyle(document.body);
+  const C = n => cs.getPropertyValue(n).trim();
+  const paper = C("--paper") || "#FAF7F0", ink = C("--ink") || "#2B2B28",
+        river = C("--river") || "#16646B", hill = C("--hill") || "#D9A85A",
+        seal = C("--seal") || "#C1382B";
+
+  try{
+    await document.fonts.load('700 86px "Noto Serif KR"');
+    await document.fonts.load('400 24px "Noto Serif KR"');
+    await document.fonts.ready;              // 이걸 안 기다리면 기본체로 그려진다
+  }catch(e){}
+
+  const W = 1080, H = 1350, P = 80;
+  const F = (w,s) => `${w} ${s}px "Noto Serif KR", serif`;
+
+  x.fillStyle = paper; x.fillRect(0,0,W,H);
+  x.strokeStyle = river; x.globalAlpha = .055; x.lineWidth = 1;
+  for(let i=0;i<W;i+=16){ x.beginPath(); x.moveTo(i+.5,0); x.lineTo(i+.5,H); x.stroke(); }
+  for(let j=0;j<H;j+=16){ x.beginPath(); x.moveTo(0,j+.5); x.lineTo(W,j+.5); x.stroke(); }
+  x.globalAlpha = 1;
+
+  // 국기
+  const fw = 114, fh = 76, fx = (W-fw)/2, fy = P;
+  x.fillStyle = paper; x.fillRect(fx,fy,fw,fh);
+  x.fillStyle = river; x.fillRect(fx,fy,fw*.2,fh); x.fillRect(fx+fw*.8,fy,fw*.2,fh);
+  x.save(); x.translate(fx,fy); x.scale(fw/540,fh/360);
+  x.translate(101.25,63); x.scale(3.375,3.375);
+  x.fillStyle = hill; x.fill(new Path2D(HILL)); x.restore();
+
+  x.textAlign = "center"; x.fillStyle = ink;
+  x.font = F(700,86); x.fillText(spaced("우두국",.16), W/2, fy+fh+112);
+  x.font = F(400,23); x.fillStyle = withA(ink,.72);
+  x.fillText(spaced("입국관리소",.42), W/2, fy+fh+160);
+
+  x.strokeStyle = withA(ink,.28); x.lineWidth = 1;
+  line(x,P,fy+fh+200,W-P,fy+fh+200);
+
+  // 도장
+  const sw = 604, sh = 404, sx = W/2, sy = 700;
+  x.save(); x.translate(sx,sy); x.rotate(-8*Math.PI/180);
+  x.strokeStyle = seal; x.lineWidth = 7;
+  rr(x,-sw/2,-sh/2,sw,sh,12); x.stroke();
+  x.lineWidth = 3; rr(x,-sw/2+17,-sh/2+17,sw-34,sh-34,6); x.stroke();
+  x.save();
+  rr(x,-sw/2+17,-sh/2+17,sw-34,sh-34,6); x.clip();        // 언덕이 테두리 밖으로 새지 않게
+  x.globalAlpha = .1; x.translate(40,36); x.scale(2.6,2.6); x.translate(0,-20);
+  x.fillStyle = seal; x.fill(new Path2D(HILL));
+  x.restore();
+  x.fillStyle = seal; x.textAlign = "center";
+  x.font = F(400,29); x.fillText(spaced("牛頭國",.5), 0, -104);
+  x.font = F(700,124); x.fillText(spaced("입국",.17), 0, 24);
+  x.font = F(400,40); x.fillText(dateStr(new Date(S.lastEntry ? S.lastEntry.at : Date.now())), 0, 88);
+  const rt = S.lastEntry ? (ROUTES.filter(r=>r.id===S.lastEntry.route)[0]||{}).label : "소양2교";
+  x.font = F(400,22); x.fillText(spaced(rt||"소양2교",.2), 0, 136);
+  x.restore();
+
+  // 수치 3개
+  const ty = 1095;
+  x.strokeStyle = withA(ink,.28);
+  line(x,P,ty-66,W-P,ty-66); line(x,P,ty+86,W-P,ty+86);
+  const e = S.lastEntry || {};
+  const stats = [
+    ["체류", dur(e)],
+    ["도장", `${doneCount()} / ${MISSIONS.length}`],
+    ["비자", e.visa ? `${e.visa} · ${e.name}` : "—"]
+  ];
+  const cw = (W-P*2)/3;
+  stats.forEach((s,i) => {
+    const cx2 = P + cw*i + cw/2;
+    if(i){ x.strokeStyle = withA(ink,.22); line(x,P+cw*i,ty-46,P+cw*i,ty+66); }
+    x.fillStyle = withA(ink,.7); x.font = F(400,19);
+    x.fillText(spaced(s[0],.22), cx2, ty-16);
+    x.fillStyle = i===2 ? river : ink; x.font = F(700, i===2 ? 34 : 42);
+    x.fillText(s[1], cx2, ty+38);
+  });
+
+  // 하단
+  x.textAlign = "left"; x.fillStyle = withA(ink,.72); x.font = F(400,20);
+  x.fillText(`오늘의 1각 ${gak().min}분`, P, H-P);
+  x.textAlign = "right"; x.fillStyle = withA(ink,.62); x.font = F(400,18);
+  x.fillText("udu.example", W-P, H-P);
+}
+function dur(e){
+  if(!e || !e.at) return "—";
+  const m = Math.max(1, Math.round((Date.now() - new Date(e.at).getTime())/60000));
+  return m < 60 ? `${m}분` : `${Math.floor(m/60)}시간 ${m%60}분`;
+}
+function spaced(s,em){ return s.split("").join(em > .3 ? "  " : " "); }
+function withA(c,a){
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(c.replace("#",""));
+  if(!m) return c;
+  return `rgba(${parseInt(m[1],16)},${parseInt(m[2],16)},${parseInt(m[3],16)},${a})`;
+}
+function line(x,a,b,c,d){ x.beginPath(); x.moveTo(a,b+.5); x.lineTo(c,d+.5); x.stroke(); }
+function rr(x,a,b,w,h,r){
+  x.beginPath(); x.moveTo(a+r,b);
+  x.arcTo(a+w,b,a+w,b+h,r); x.arcTo(a+w,b+h,a,b+h,r);
+  x.arcTo(a,b+h,a,b,r); x.arcTo(a,b,a+w,b,r); x.closePath();
+}
+
+async function shareCard(cv){
+  const note = document.getElementById("shareNote");
+  const blob = await new Promise(r => cv.toBlob(r, "image/png"));
+  if(!blob){ if(note) note.textContent = "카드를 만들지 못했습니다. 다시 시도하십시오."; return; }
+  const file = new File([blob], "udu-entry.png", { type:"image/png" });
+
+  try{
+    if(navigator.canShare && navigator.canShare({ files:[file] })){
+      await navigator.share({ files:[file], title:"우두국 입국" });
+      if(note) note.textContent = "공유를 전달했습니다.";
+      return;
+    }
+  }catch(e){ /* 사용자 취소 또는 차단 */ }
+
+  try{
+    const dl = await (window.claude && window.claude.use ? window.claude.use("downloads") : null);
+    if(dl){
+      await dl.save({ filename:"udu-entry.png", data:blob });
+      if(note) note.textContent = "저장을 요청했습니다.";
+      return;
+    }
+  }catch(e){}
+
+  if(note) note.textContent = "이 환경에서는 공유와 저장이 막혀 있습니다. 카드를 길게 눌러 이미지를 저장하십시오.";
+}
+
+/* S5 — 국가 과업 */
+function scrMissions(root){
+  if(!S.pp) return go("border");
+  const list = el("div",{ class:"stack" });
+
+  CATS.forEach(c => {
+    const ms = catList(c);
+    const open = S.cat === c;
+    const pips = el("div",{ class:"pips" });
+    ms.forEach(m => pips.appendChild(el("div",{ class:"pip" + (mDone(m) ? " on" : "") })));
+
+    const box = el("div",{ class:"cat" });
+    box.appendChild(el("button",{ "aria-expanded":String(open),
+      onclick:()=>{ S.cat = open ? null : c; render(); } },[
+      el("h3",{ text:c }), pips,
+      el("span",{ class:"chev", text: open ? "−" : "+" })
+    ]));
+
+    if(open) ms.forEach(m => {
+      const ok = mDone(m);
+      box.appendChild(el("button",{ class:"mrow",
+        onclick:()=>{ S.mid = m.id; go("mission"); } },[
+        el("span",{ class:"num", text:pad(m.id) }),
+        el("span",{ style:"flex:1 1 auto;min-width:0" },[
+          el("span",{ class:"nm", text:m.stamp }),
+          el("span",{ class:"sub", text: ok ? "발급 완료" : m.desc })
+        ]),
+        ok ? el("span",{ class:"tag ok", text:"도장" }) : el("span",{ class:"diff", text:stars(m.diff) })
+      ]));
+    });
+    list.appendChild(box);
+  });
+
+  root.appendChild(el("div",{ class:"stack" },[
+    el("p",{ class:"eyebrow", text:"우두국 입국관리소" }),
+    el("div",{ style:"display:flex;align-items:baseline;justify-content:space-between;gap:1rem" },[
+      el("h2",{ style:"font-size:1.45rem;letter-spacing:.04em", text:"국가 과업" }),
+      el("p",{ style:"font-size:1.3rem;font-weight:700;font-variant-numeric:tabular-nums",
+               text:`${doneCount()} / ${MISSIONS.length}` })
+    ]),
+    el("hr",{ class:"rule" }),
+    list,
+    geoReady() ? null : el("p",{ class:"note",
+      text:"위치로 인증하는 과업은 답사로 좌표를 확정한 뒤 열립니다. 지금은 모의로만 완료할 수 있습니다." }),
+    el("button",{ class:"lnk", onclick:()=>go("passport"), text:"여권으로" })
+  ]));
+}
+
+/* S5-상세 */
+function scrMission(root){
+  const m = MISSIONS.filter(x => x.id === S.mid)[0];
+  if(!m || !S.pp) return go("missions");
+  const p = S.pp, ok = mDone(m);
+  const body = el("div",{ class:"stack" });
+
+  body.appendChild(el("div",{},[
+    el("p",{ class:"eyebrow", text:`과업 ${pad(m.id)} · ${m.cat}` }),
+    el("h2",{ style:"font-size:1.6rem;letter-spacing:.04em;margin-top:.6rem", text:m.stamp }),
+    el("p",{ style:"margin-top:.7rem;display:flex;gap:.6rem;align-items:center" },[
+      ok ? el("span",{ class:"tag ok", text:"도장 발급" }) : el("span",{ class:"tag", text:"미발급" }),
+      el("span",{ class:"diff", text:stars(m.diff) })
+    ])
+  ]));
+  body.appendChild(el("hr",{ class:"rule" }));
+  body.appendChild(el("p",{ style:"font-size:1rem;line-height:1.85", text:m.desc }));
+  if(m.warn) body.appendChild(el("p",{ class:"note", style:"color:var(--seal)", text:m.warn }));
+
+  if(m.verify === "auto"){
+    body.appendChild(el("hr",{ class:"rule" }));
+    body.appendChild(el("p",{ class:"note", text: m.pending || m.how || "" }));
+    if(!ok && !m.pending)
+      body.appendChild(el("button",{ class:"btn btn-primary", onclick:startControl, text:"입국 심사 받기" }));
+  }
+  else if(m.verify === "won"){
+    body.appendChild(el("hr",{ class:"rule" }));
+    const cur = p.nums[m.id];
+    if(typeof cur === "number")
+      body.appendChild(el("p",{ class:"big", text:`${cur.toLocaleString("ko-KR")}${m.unit}` }));
+    const inp = el("input",{ type:"number", inputmode:"numeric", min:"0", step:"100",
+      id:`n${m.id}`, placeholder:m.ph, "aria-label":`${m.stamp} 금액` });
+    body.appendChild(el("div",{ class:"numrow" },[
+      inp,
+      el("button",{ class:"btn btn-primary", onclick:()=>{
+        const v = parseInt(inp.value, 10);
+        if(!isFinite(v) || v <= 0) return;
+        p.nums[m.id] = v; save(p); render();
+      }, text:"신고" })
+    ]));
+    body.appendChild(el("p",{ class:"note", text:"신고한 금액은 기기에만 남습니다." }));
+  }
+  else if(m.verify === "photo"){
+    body.appendChild(el("hr",{ class:"rule" }));
+    const shotList = p.shots[m.id] || [];
+    const need = m.need || 1;
+    body.appendChild(el("p",{ class:"note",
+      text: m.days
+        ? `각기 다른 날 ${need}장. 현재 ${distinctDays(shotList)}일 / ${need}일.`
+        : `사진 ${need}장. 현재 ${shotList.length} / ${need}.` }));
+    if(shotList.length){
+      const shots = el("div",{ class:"shots" });
+      shotList.forEach(s => {
+        const img = el("img",{ alt:`${m.stamp} 인증 사진 ${dateStr(new Date(s.at))}` });
+        shots.appendChild(img);
+        getShot(s.key).then(b => { if(b) img.src = URL.createObjectURL(b); });
+      });
+      body.appendChild(shots);
+    }
+    const finp = el("input",{ type:"file", accept:"image/*", id:`f${m.id}`,
+      onchange: async ev => {
+        const f = ev.target.files && ev.target.files[0];
+        if(!f) return;
+        const blob = await shrink(f);
+        if(!blob){ alertNote("사진을 읽을 수 없습니다."); return; }
+        const key = `${m.id}-${Date.now()}`;
+        const okSave = await putShot(key, blob);
+        if(!okSave){ alertNote("이 기기에 사진을 저장할 수 없습니다."); return; }
+        (p.shots[m.id] = p.shots[m.id] || []).push({ at:new Date().toISOString(), key });
+        save(p); render();
+      } });
+    body.appendChild(el("label",{ class:"filelbl", for:`f${m.id}` },[
+      el("span",{ text:"사진 추가" }), finp ]));
+    body.appendChild(el("p",{ class:"note",
+      text:"사진은 기기 안에만 저장되고 어디에도 전송되지 않습니다." }));
+  }
+  else if(m.verify === "timer"){
+    body.appendChild(el("hr",{ class:"rule" }));
+    if(p.timer){
+      const n = el("p",{ class:"big" });
+      const upd = () => {
+        const s = Math.max(0, Math.floor((Date.now() - p.timer)/1000));
+        n.textContent = `${pad(Math.floor(s/60))}:${pad(s%60)}`;
+      };
+      upd(); S.tick = setInterval(upd, 1000);
+      body.appendChild(el("p",{ class:"eyebrow", style:"text-align:center", text:"대기 중" }));
+      body.appendChild(n);
+      body.appendChild(el("button",{ class:"btn btn-primary", onclick:()=>{
+        const min = Math.max(1, Math.round((Date.now() - p.timer)/60000));
+        p.waits.push(min); p.timer = null; p.done[m.id] = new Date().toISOString();
+        save(p); render();
+      }, text:"셔틀 도착" }));
+      body.appendChild(el("button",{ class:"btn btn-quiet", onclick:()=>{
+        p.timer = null; save(p); render();
+      }, text:"측정 취소" }));
+    } else {
+      body.appendChild(el("button",{ class:"btn btn-primary", onclick:()=>{
+        p.timer = Date.now(); save(p); render();
+      }, text:"대기 시작" }));
+      body.appendChild(el("p",{ class:"note",
+        text:`신고한 대기 시간이 시간본위제 환율을 만듭니다. 오늘의 1각은 ${gak().min}분입니다.` }));
+    }
+  }
+  else if(m.verify === "geo"){
+    body.appendChild(el("hr",{ class:"rule" }));
+    if(ok){
+      body.appendChild(el("p",{ class:"note", text:`${dateStr(new Date(p.done[m.id]))}에 발급되었습니다.` }));
+    } else if(geoReady()){
+      body.appendChild(el("button",{ class:"btn btn-primary", onclick:()=>checkGeo(m), text:"현재 위치로 인증" }));
+    } else {
+      body.appendChild(el("p",{ html:'<span class="tag">답사 전 · 좌표 미확정</span>' }));
+      body.appendChild(el("p",{ class:"note",
+        text:"이 과업의 좌표가 아직 비어 있습니다. 답사에서 확정하면 위치 인증이 열립니다." }));
+      if(S.sim) body.appendChild(el("button",{ class:"btn btn-quiet", onclick:()=>{
+        p.done[m.id] = new Date().toISOString(); save(p); render();
+      }, text:"모의 완료" }));
+    }
+  }
+  else if(m.verify === "read"){
+    body.appendChild(el("hr",{ class:"rule" }));
+    if(!ok) body.appendChild(el("button",{ class:"btn btn-primary", onclick:()=>{
+      p.done[m.id] = new Date().toISOString(); save(p); render();
+    }, text:"읽음" }));
+  }
+
+  if(m.read){
+    body.appendChild(el("hr",{ class:"rule" }));
+    body.appendChild(scriptBlock(HISTORY[m.read]));
+    if(m.read2){
+      if(p.done[m.id + "b"]){
+        body.appendChild(el("hr",{ class:"rule" }));
+        body.appendChild(scriptBlock(HISTORY[m.read2]));
+      } else {
+        body.appendChild(el("button",{ class:"btn btn-quiet", onclick:()=>{
+          p.done[m.id + "b"] = new Date().toISOString(); save(p); render();
+        }, text:`${HISTORY[m.read2].sub} 이어 듣기` }));
+      }
+    }
+  }
+
+  body.appendChild(el("button",{ class:"lnk", onclick:()=>go("missions"), text:"과업 목록으로" }));
+  root.appendChild(body);
+}
+
+function scriptBlock(h){
+  if(!h) return el("div");
+  const box = el("div",{},[ el("p",{ class:"eyebrow", text:h.sub }) ]);
+  const sc = el("div",{ class:"script", style:"margin-top:.9rem" });
+  h.body.forEach(b => {
+    if(typeof b === "string") sc.appendChild(el("p",{ text:b }));
+    else if(b.q) sc.appendChild(el("p",{ class:"q", text:b.q }));
+    else if(b.slot) sc.appendChild(el("p",{ class:"slot", text:b.slot }));
+  });
+  box.appendChild(sc);
+  return box;
+}
+
+async function checkGeo(m){
+  const r = await locate();
+  if(!r.ok){ alertNote("위치를 확인할 수 없습니다."); return; }
+  S.pp.done[m.id] = new Date().toISOString();
+  save(S.pp); render();
+}
+function alertNote(t){
+  const app = document.getElementById("app");
+  app.insertBefore(el("p",{ class:"note", style:"color:var(--seal)", text:t }), app.firstChild);
+}
+
+render();
+</script>
