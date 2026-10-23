@@ -14,6 +14,8 @@
   --seal:#C1382B;         /* 입국 주인 — 도장에만 */
   --grid:rgba(22,100,107,.055);
   --surface:#FFFFFF;
+  /* 영토색 — 국민이 고른다. 주인색은 여기 없다 */
+  --own-river:#16646B; --own-hill:#B5873F; --own-pine:#3E5D4A; --own-clay:#8A5A44; --own-ink:#2B2B28;
   --serif:"Noto Serif KR",'Nanum Myeongjo',Batang,'Times New Roman',serif;
   --mono:ui-monospace,'Cascadia Mono',Consolas,'DejaVu Sans Mono',monospace;
 }
@@ -24,6 +26,7 @@
     --rule:rgba(242,239,231,.26);
     --river:#4FA6AD; --hill:#E0B775;
     --seal:#E8574A; --grid:rgba(79,166,173,.07);
+    --own-river:#4FA6AD; --own-hill:#E0B775; --own-pine:#7FA98C; --own-clay:#C08A6E; --own-ink:#F2EFE7;
     --surface:#232320; color-scheme:dark;
   }
 }
@@ -33,6 +36,7 @@
   --rule:rgba(242,239,231,.26);
   --river:#4FA6AD; --hill:#E0B775;
   --seal:#E8574A; --grid:rgba(79,166,173,.07);
+  --own-river:#4FA6AD; --own-hill:#E0B775; --own-pine:#7FA98C; --own-clay:#C08A6E; --own-ink:#F2EFE7;
   --surface:#232320; color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -69,8 +73,10 @@ button{font:inherit;color:inherit;cursor:pointer}
 .stack{display:flex;flex-direction:column;gap:1.1rem}
 .stack-sm{display:flex;flex-direction:column;gap:.55rem}
 
-/* 국기 */
-.flag{display:block;height:auto}
+/* 국기 — 테두리는 SVG 안이 아니라 여기서 긋는다. 안에서 그으면 선이 뷰박스에
+   맞춰 축소돼 46px 에서 사라지고, 획의 바깥 절반이 뷰박스에 잘린다.
+   바탕색(--paper)이 페이지 배경과 같아서 이 선이 없으면 깃발의 네 변이 안 보인다 */
+.flag{display:block;height:auto;border:1px solid var(--rule)}
 
 /* 랜딩 */
 .facts{display:grid;grid-template-columns:1fr auto;gap:.5rem 1rem;font-size:.92rem}
@@ -123,11 +129,16 @@ button{font:inherit;color:inherit;cursor:pointer}
 @keyframes bleed{to{box-shadow:0 0 5px 1px rgba(193,56,43,.42);transform:rotate(-8deg) scale(1.015);filter:blur(.35px)}}
 .stamp.exit{border-style:dashed}
 .stamp.exit .stamp-wm{opacity:.085}   /* 도장이 작아지면 언덕이 날짜를 덮는다 */
+/* 입국 실선 · 출국 파선 · 측량 점선 + 네 모서리 등록 표식.
+   입국·출국이 관인이라면 측량은 야장이다. 모서리 표식이 그 차이를 혼자 다 낸다 */
+.stamp.survey{border-style:dotted}
+.stamp-reg{position:absolute;inset:0;width:100%;height:100%;opacity:.85;pointer-events:none}
 .stamp-in{
   height:100%;border:1.5px solid var(--seal);border-radius:3px;overflow:hidden;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;position:relative;
 }
 .stamp.exit .stamp-in{border-style:dashed}
+.stamp.survey .stamp-in{border-style:dotted}
 .stamp-wm{position:absolute;bottom:-6%;right:-10%;width:72%;opacity:.12}
 .stamp-han{font-size:.78rem;letter-spacing:.44em;text-indent:.44em;position:relative}
 .stamp-big{font-size:clamp(2.1rem,11vw,2.9rem);font-weight:700;letter-spacing:.16em;text-indent:.16em;line-height:1.02;position:relative;text-shadow:0 0 1.5px rgba(193,56,43,.4)}
@@ -152,8 +163,12 @@ button{font:inherit;color:inherit;cursor:pointer}
 .meta .k{font-size:.64rem;letter-spacing:.2em;color:var(--ink-faint)}
 .meta .v{font-size:.95rem;font-weight:700;overflow-wrap:anywhere}
 .grid-stamps{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
-.cell{aspect-ratio:1;border:1px dashed var(--rule);border-radius:2px;display:grid;place-items:center;font-size:.62rem;color:var(--ink-faint);padding:.2rem;text-align:center;line-height:1.3;white-space:pre-line}
+.cell{position:relative;aspect-ratio:1;border:1px dashed var(--rule);border-radius:2px;display:grid;place-items:center;font-size:.62rem;color:var(--ink-faint);padding:.2rem;text-align:center;line-height:1.3;white-space:pre-line}
+/* 빈 칸의 등록 표식 — "채워질 자리"라고 말한다. 화면설계: 빈 도장 칸이 보여야 한다.
+   측량 도장의 모서리 표식과 같은 모티프다. 두 곳이 한 화면에 같이 나오지 않는다 */
+.cell-reg{position:absolute;inset:0;width:100%;height:100%;opacity:.38;pointer-events:none;color:var(--ink)}
 .cell.on{border:1.5px solid var(--seal);border-style:solid;color:var(--seal);font-weight:700}
+.cell .ico.faint{color:var(--ink-faint);width:21px;height:21px;margin-bottom:2px}
 .mrz{font-family:var(--mono);font-size:.64rem;line-height:1.8;letter-spacing:.03em;color:var(--ink-soft);white-space:pre-line;overflow-x:auto}
 .rate{display:flex;justify-content:space-between;align-items:baseline;font-size:.9rem}
 .rate b{font-variant-numeric:tabular-nums}
@@ -198,6 +213,68 @@ button{font:inherit;color:inherit;cursor:pointer}
 .numrow input{flex:1 1 auto;min-width:0;padding:.85rem .9rem;border:1.5px solid var(--ink);border-radius:2px;background:transparent;color:inherit;font:inherit;font-variant-numeric:tabular-nums}
 .numrow button{flex:0 0 auto;width:auto;padding-inline:1.2rem}
 .big{font-size:2.7rem;font-weight:700;font-variant-numeric:tabular-nums;text-align:center;letter-spacing:.02em;line-height:1.1}
+
+/* 도면 — 위성사진이 아니라 측량도면이다. 타일을 깔지 않는다.
+   흰 카드에 넣지 않는다. 종이 위에 그린 그림이어야 해서 바탕을 비우고 도면 테두리만 두른다 */
+.plan{position:relative;padding:.7rem;border:1px solid var(--rule);
+  box-shadow:inset 0 0 0 4px var(--paper), inset 0 0 0 5px var(--rule)}
+.plan svg{display:block;width:100%;height:auto}
+.plan .north{position:absolute;top:.9rem;left:1rem;display:flex;flex-direction:column;
+  align-items:center;gap:1px;color:var(--ink-faint);font-size:.56rem;letter-spacing:.1em}
+.plan .north svg{width:11px;height:16px}
+.title-blk{position:absolute;right:.95rem;bottom:.95rem;border:1px solid var(--rule);
+  background:var(--paper);padding:.35rem .5rem;font-size:.58rem;line-height:1.75;
+  color:var(--ink-soft);display:grid;grid-template-columns:auto auto;gap:0 .6rem}
+.title-blk dt{color:var(--ink-faint);letter-spacing:.08em}
+.title-blk dd{margin:0;font-variant-numeric:tabular-nums;text-align:right;overflow-wrap:anywhere}
+/* 좁은 화면에서는 표제란이 도면 폭의 40% 를 먹는다. 제일 긴 줄을 뺀다 —
+   측량자 번호는 신분증에 이미 있다 */
+@media (max-width:480px){ .title-blk .who{display:none} }
+/* 선은 전부 non-scaling-stroke 다. 굵기를 미터로 주면 폰에서 0.2px 가 되어 사라진다.
+   원은 스케일을 타므로 반지름은 폰 기준으로 잡았다 (넓은 화면에서 조금 커진다) */
+.plan [class]{vector-effect:non-scaling-stroke}
+.plan .edge{fill:none;stroke:var(--river);stroke-width:1.6;opacity:.55}   /* 강 */
+.plan .edge.drawn{stroke:var(--ink-faint);stroke-dasharray:4 3;stroke-width:1.1;opacity:.9}
+.plan .land{fill:var(--ink);opacity:.035;stroke:none}
+/* 격자는 칸마다 네모를 그리지 않는다. 그러면 표가 된다 — 땅 모양으로 잘린 괘선이어야 한다 */
+.plan .gl{stroke:var(--ink);stroke-width:.75;opacity:.3;fill:none}
+.plan .own{stroke:none}      /* 아래에서 차오른다. 불투명도가 아니라 높이가 는다 */
+.plan .seed{fill:var(--ink);opacity:.55;stroke:none}
+.plan .mine{fill:var(--paper);stroke:var(--ink);stroke-width:1.4}
+.plan .here{fill:none;stroke:var(--river);stroke-width:2}
+.own-river{color:var(--own-river)} .own-hill{color:var(--own-hill)} .own-pine{color:var(--own-pine)}
+.own-clay{color:var(--own-clay)} .own-ink{color:var(--own-ink)}
+.swatch{display:flex;gap:.45rem;flex-wrap:wrap}
+.swatch button{display:flex;align-items:center;gap:.4rem;padding:.4rem .6rem;border:1px solid var(--rule);
+  background:transparent;border-radius:2px;font-size:.78rem;color:var(--ink-soft)}
+.swatch button[aria-pressed="true"]{border-color:var(--ink);color:var(--ink);font-weight:700}
+/* 견본 색은 i 에 직접 건다. 버튼에 걸면 .swatch button 의 color 가 이긴다 */
+.swatch i{width:12px;height:12px;border-radius:2px;flex:0 0 auto;border:1px solid var(--rule)}
+.swatch i.own-river{background:var(--own-river)} .swatch i.own-hill{background:var(--own-hill)}
+.swatch i.own-pine{background:var(--own-pine)} .swatch i.own-clay{background:var(--own-clay)}
+.swatch i.own-ink{background:var(--own-ink)}
+.terr{display:flex;justify-content:space-between;align-items:baseline;gap:1rem}
+.terr b{font-size:1.3rem;font-variant-numeric:tabular-nums}
+
+/* 국토 측량 */
+.lbl{display:block;font-size:.78rem;letter-spacing:.14em;color:var(--ink-soft);margin-bottom:.45rem}
+.fld{width:100%;padding:.85rem .9rem;border:1.5px solid var(--ink);border-radius:2px;background:transparent;color:inherit;font:inherit}
+.fld::placeholder{color:var(--ink-faint)}
+.ico{flex:0 0 auto;display:block;width:20px;height:20px}
+.ico svg{display:block;width:100%;height:100%}
+.ico.sm{width:18px;height:18px}
+.sv{display:flex;gap:.8rem;align-items:flex-start;border:1px solid var(--rule);border-radius:2px;padding:.8rem .9rem}
+.sv img{width:64px;height:64px;flex:0 0 auto;object-fit:cover;border:1px solid var(--rule);display:block}
+.sv .b{flex:1 1 auto;min-width:0}
+.sv .t{font-size:.95rem;line-height:1.55;overflow-wrap:anywhere;display:flex;gap:.45rem;align-items:flex-start}
+.sv .t .ico{margin-top:.15rem}
+.sv .w{font-size:.8rem;line-height:1.5;color:var(--river);margin-top:.3rem;overflow-wrap:anywhere}
+.sv .m{font-size:.72rem;color:var(--ink-faint);margin-top:.35rem;font-variant-numeric:tabular-nums}
+.sv .x{flex:0 0 auto;background:none;border:0;padding:.2rem 0 .2rem .4rem;font-size:.72rem;color:var(--ink-faint);text-decoration:underline;text-underline-offset:2px}
+.sv .x[data-armed="1"]{color:var(--ink);font-weight:700}
+.tally{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem .9rem;font-size:.84rem}
+.tally div{display:flex;justify-content:space-between;gap:.6rem;border-bottom:1px dotted var(--rule);padding:.15rem 0}
+.tally b{font-variant-numeric:tabular-nums}
 .note{font-size:.8rem;line-height:1.65;color:var(--ink-soft)}
 .diag{cursor:pointer;font-size:.78rem;letter-spacing:.04em;color:var(--ink-soft);padding:.2rem 0}
 .diag.bad{color:var(--seal);font-weight:700}
@@ -237,6 +314,30 @@ const CFG = {
   bufferM: 50,               // 입국 판정은 관대하게. 경계 밖 이만큼까지 통과
   exitBandM: 1000,           // 출국 심사를 받는 국경 일대. 이보다 멀면 받지 않는다
   checkinHours: [7, 21],     // 헌법 제11조
+
+  /* ── 도면용 경계 ──
+     boundary 와 쓰임이 다르다. boundary 는 도장을 주는 선이라 정확해야 하고,
+     territory 는 도면을 그리고 격자를 까는 선이라 100m 틀려도 상관없다.
+     그래서 territory 만 먼저 채운다. 도장 판정은 좌표가 확인될 때까지 모의로 둔다.
+
+     만든 방법: 서·남·동은 OpenStreetMap 의 북한강·소양강 중심선을 그대로 땄다.
+     두 강은 (37.89672,127.72032) 합수머리에서 만난다. 북쪽만 강이 아니라
+     사농동과 맞닿는 선이어서, OSM 에 등재된 우두동 가게 23곳을 전부 품는
+     최소 위도 37.9145 로 그었다. 면적 5.15㎢ — 설정집의 4.29㎢ 보다 큰데,
+     강 중심선을 따서 강폭의 절반이 양쪽으로 들어온 탓이 크다.
+     북쪽 선은 내가 정한 값이다. NORTH_LAT 한 줄만 고치면 다시 그려진다. */
+  territory: [
+    [37.89672,127.72032],[37.89851,127.72133],[37.901,127.72133],[37.90425,127.72054],
+    [37.90656,127.71866],[37.91026,127.71551],[37.91233,127.71472],[37.9145,127.7149],
+    [37.9145,127.74492],[37.91334,127.7452],[37.90944,127.74596],[37.9082,127.74626],
+    [37.90542,127.74739],[37.90402,127.7477],[37.90267,127.74785],[37.90127,127.74785],
+    [37.90025,127.74773],[37.89946,127.74754],[37.89859,127.74711],[37.89741,127.74625],
+    [37.89582,127.74448],[37.89473,127.74295],[37.89456,127.74256],[37.89426,127.74185],
+    [37.89406,127.74091],[37.89402,127.73998],[37.89406,127.73894],[37.8942,127.73812],
+    [37.89437,127.73727],[37.89553,127.73263],[37.8959,127.7306],[37.89637,127.72654]
+  ],
+  cellM: 300,                // 격자 한 칸의 변. 4~5㎢ 면 쉰 칸 안팎이 된다
+  holdDays: 7,               // 이만큼 밟으면 칸이 꽉 찬다. 하루에 한 번만 센다
   excluded: [],              // [{name, reason, center:[lat,lng], radiusM}]
   bridges: [],               // [{id, name, end:[lat,lng], hasFootway, walkMin}] 체크리스트 §7
   maxAccM: 200,              // 측위 오차가 이보다 크면 판정하지 않는다
@@ -245,7 +346,79 @@ const CFG = {
 
 const HILL = "M2 88C11 85 19 66 28 42 32 30 37 24 43 24 49 24 54 31 59 40 62 46 65 39 70 36 74 34 78 37 82 46 87 59 92 81 98 88Z";
 
-const ORIGINS = ["효자동","석사동","퇴계동","후평동","소양동","감자국 (춘천 시내)","국외"];
+/* 우두동이 맨 앞이다. 주민이 자기 나라에 "감자국"으로 입국하던 것을 고친다.
+   우두동을 고르면 여권이 아니라 국민증이 나오고, 국민은 입국 심사를 받지 않는다. */
+const ORIGINS = ["우두동","효자동","석사동","퇴계동","후평동","소양동","감자국 (춘천 시내)","국외"];
+const HOME = "우두동";
+
+/* 측량 분류 — 적는 것은 "장소"가 아니라 "장소 + 조건"이다 */
+const SURVEY_KINDS = [
+  { id:"eat",   label:"먹는 곳",   hint:"국을 파는 곳, 밥을 파는 곳" },
+  { id:"drink", label:"마시는 곳", hint:"다방, 술집" },
+  { id:"walk",  label:"걷는 길",   hint:"둑길, 샛길. 지도에 선이 없는 길" },
+  { id:"view",  label:"보이는 것", hint:"각도와 시각이 맞아야 보이는 것" }
+];
+const kindOf = id => SURVEY_KINDS.filter(k => k.id === id)[0] || { id, label:"미분류" };
+
+/* 이미 알려진 장소 — 도면이 첫날부터 비어 있지 않게 하는 씨앗.
+   OpenStreetMap 에 등재된 우두동 음식·다방 23곳이다. 보다시피 거의 프랜차이즈다.
+   숨은 곳은 여기 없다 — 그건 측량으로 채워 넣는 2층이다. (ODbL, 하단에 표기) */
+const SEED = [
+  { n:"빽다방", k:"drink", c:[37.90111,127.72928] },
+  { n:"유캔두잇 반다비점", k:"drink", c:[37.903,127.74035] },
+  { n:"이디야커피", k:"drink", c:[37.89961,127.73275] },
+  { n:"카페 모두 1호점", k:"drink", c:[37.90729,127.72609] },
+  { n:"커피니 벨몽드점", k:"drink", c:[37.90641,127.72824] },
+  { n:"컴포즈커피", k:"drink", c:[37.90181,127.72995] },
+  { n:"투썸플레이스", k:"drink", c:[37.91391,127.72247] },
+  { n:"59쌀피자 우두점", k:"eat", c:[37.89964,127.73247] },
+  { n:"고반식당 춘천우두점", k:"eat", c:[37.90667,127.73386] },
+  { n:"광판팔뚝김밥 우두점", k:"eat", c:[37.90189,127.73005] },
+  { n:"급식소", k:"eat", c:[37.90478,127.74066] },
+  { n:"김밥천국", k:"eat", c:[37.89951,127.73239] },
+  { n:"동명카츠 춘천우두점", k:"eat", c:[37.8995,127.7327] },
+  { n:"롯데리아", k:"eat", c:[37.89939,127.73232] },
+  { n:"명륜진사갈비 춘천우두점", k:"eat", c:[37.90581,127.73269] },
+  { n:"모리스시", k:"eat", c:[37.91384,127.72246] },
+  { n:"본스 치킨", k:"eat", c:[37.91237,127.72256] },
+  { n:"산수야", k:"eat", c:[37.91449,127.72294] },
+  { n:"삼첩분식 춘천우두점", k:"eat", c:[37.89802,127.73648] },
+  { n:"안다미로 달팽이 해장국", k:"eat", c:[37.91271,127.74132] },
+  { n:"어라운드맘스", k:"eat", c:[37.90643,127.72831] },
+  { n:"프랭크버거 춘천우두점", k:"eat", c:[37.9012,127.72927] },
+  { n:"해마바다포차&오늘통닭 춘천우두점", k:"eat", c:[37.90776,127.73283] }
+];
+
+/* 영토색 — 국민이 고른다. 주인색 #C1382B 는 없다. 도장에만 쓰는 색이다. */
+const COLORS = [
+  { id:"river", name:"양강 청록" },
+  { id:"hill",  name:"우두산 황토" },
+  { id:"pine",  name:"솔빛" },
+  { id:"clay",  name:"기와" },
+  { id:"ink",   name:"공문 묵색" }
+];
+const colorOf = p => (COLORS.some(c => c.id === (p && p.color)) ? p.color : "river");
+
+/* 분류 픽토그램 — 도로표지판 계열. 목록이 길어지면 글자만으로는 훑어지지 않는다.
+   20px 에서 읽히는 것만 쓴다. 획 굵기 1.5 로 통일하고 색은 물려받는다. */
+const KIND_ICON = {
+  eat:`<path d="M4 10H20L18.5 17H5.5L4 10Z"/><path d="M6 17V19H18V17"/>
+       <path d="M7 7.5C7 6.5 8 6.5 8 5.5"/><path d="M12 7.5C12 6.5 13 6.5 13 5.5"/>
+       <path d="M17 7.5C17 6.5 18 6.5 18 5.5"/>`,
+  drink:`<path d="M5 5H16V11.5C16 14 14 16 11.5 16H9.5C7 16 5 14 5 11.5V5Z"/>
+         <path d="M16 7H18C20 7 20 11 17 11H16"/><path d="M10.5 16V19"/><path d="M7.5 19H13.5"/>
+         <path d="M8 2.5V3.5"/><path d="M12 2.5V3.5"/>`,
+  walk:`<path d="M5 21C5 17 11 17 11 13S7 8 10 3"/><path d="M19 21C19 17 15 17 15 13S19 8 14 3"/>`,
+  view:`<path d="M2.5 15L7 11L10 13L15 7L21.5 12"/><path d="M2.5 19H21.5"/>
+        <circle cx="15" cy="7" r="1.5"/><path d="M15 3V4"/><path d="M19 7H18"/>`
+};
+function kindIcon(id, cls){
+  const g = KIND_ICON[id];
+  if(!g) return null;
+  return el("span",{ class:"ico" + (cls ? " " + cls : ""), "aria-hidden":"true",
+    html:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+            stroke-linecap="round" stroke-linejoin="round">${g}</svg>` });
+}
 
 const PURPOSES = ["관광","업무","귀국","기타"];
 
@@ -254,7 +427,7 @@ const ROUTES = [
   { id:"100",   label:"100 · 100-1번",            note:"배차 40~120분",   visa:"2급", name:"관광비자",     bus:true,  rank:2 },
   { id:"11-1",  label:"11-1번",                   note:"1일 16회",        visa:"1급", name:"체류비자",     bus:true,  rank:3 },
   { id:"906",   label:"906번",                    note:"1일 2회",         visa:"특급", name:"외교관 여권", bus:true,  rank:6 },
-  { id:"walk",  label:"도보 · 자전거로 다리 통과", note:"헌법 제4조",      visa:"공훈", name:"월경자 越境者", bus:false, rank:5 }
+  { id:"walk",  label:"도보 · 자전거로 다리 통과", note:"헌법 제4조",      visa:"공훈", name:"월경자",     bus:false, rank:5 }
 ];
 
 const WAITS = [
@@ -276,7 +449,7 @@ const SIM_CASES = [
 const MISSIONS = [
   { id:1,  cat:"입국", stamp:"국경 통과",   desc:"다리를 건너 우두국에 입국한다.", verify:"auto", diff:1,
     auto:p => p.entries.length > 0, how:"입국 심사를 받으면 자동으로 발급됩니다." },
-  { id:2,  cat:"입국", stamp:"월경 越境",   desc:"다리를 걸어서 또는 자전거로 건넌다.", verify:"auto", diff:3,
+  { id:2,  cat:"입국", stamp:"월경",        desc:"다리를 걸어서 또는 자전거로 건넌다.", verify:"auto", diff:3,
     auto:p => p.entries.some(e => e.route === "walk"), how:"입국 심사에서 도보·자전거를 신고하십시오." },
   { id:3,  cat:"입국", stamp:"국경 셔틀",   desc:"100번 버스로 입국한다. 배차 40~120분.", verify:"auto", diff:2,
     auto:p => p.entries.some(e => e.route === "100"), how:"입국 심사에서 100번을 신고하십시오." },
@@ -367,6 +540,9 @@ const HISTORY = {
 const KEY = "udu.passport.v1";
 function norm(p){
   p.entries = p.entries || []; p.exits = p.exits || [];
+  p.survey = p.survey || [];   // 국토 측량 보고. 사진 본체는 IndexedDB
+  p.steps = p.steps || {};     // { [칸id]: {n:밟은 날 수, first, last} } 영토
+  p.color = p.color || "river";
   p.waits = p.waits || []; p.bestRank = p.bestRank || 0;
   p.done = p.done || {}; p.shots = p.shots || {}; p.nums = p.nums || {};
   p.geo = p.geo || {};       // { [missionId]: { [pointKey]: ISO } } 지점별 방문 기록
@@ -466,7 +642,7 @@ const S = {
   pp: load(),
   sim: !CFG.boundary,
   simCase: "ok",
-  draft: { origin: ORIGINS[0] },
+  draft: { origin: null },      // 미리 고르지 않는다. 기본값이 신분을 정해버리면 안 된다
   ctl: null,
   lastEntry: null,
   lastFix: null          // { m: 국경까지 거리, at: 측량 시각 } — 실제 측량에서만 채운다
@@ -492,14 +668,19 @@ function el(tag, attrs, kids){
   (kids||[]).forEach(c => c && n.appendChild(c));
   return n;
 }
+/* 국기 — 잠긴 원. 띠를 아래 3분의 1까지 두껍게 키운 것이 핵심이다.
+   얇은 띠는 선이지만 두꺼운 띠는 덩어리라서, 원이 "그 위에 놓인 것"이 아니라
+   "거기서 올라온 것"이 된다. 물 위로 솟은 땅으로도 떠오르는 해로도 읽히고,
+   둘 다 우두동에 대해 맞는 말이라 어느 쪽으로 읽혀도 손해가 없다.
+   HILL 능선은 쓰지 않는다 — 국기는 추상(원), 도장은 구체(능선)로 갈라야
+   도장이 국기의 축소판이 아니라 다른 물건이 된다. */
 function flagSVG(w){
   const h = Math.round(w*2/3);
   return `<svg class="flag" width="${w}" height="${h}" viewBox="0 0 540 360" role="img"
-    aria-label="우두국 국기 양강기. 좌우 청록 띠는 서쪽 북한강과 동쪽 소양강, 가운데 흰 우두벌 위에 황토색 우두산이 솟아 있다.">
+    aria-label="우두국 국기 양강기. 미색 우두벌 바탕에 황토색 원이 솟아 있고 아래쪽 청록 띠가 그 밑을 덮는다. 물 위로 올라온 땅으로도, 떠오르는 해로도 읽힌다.">
     <rect width="540" height="360" fill="var(--paper)"/>
-    <rect width="108" height="360" fill="var(--river)"/>
-    <rect x="432" width="108" height="360" fill="var(--river)"/>
-    <path d="${HILL}" transform="translate(101.25 63) scale(3.375)" fill="var(--hill)"/>
+    <circle cx="270" cy="180" r="105" fill="var(--hill)"/>
+    <rect y="248" width="540" height="112" fill="var(--river)"/>
   </svg>`;
 }
 function hillWM(){
@@ -669,14 +850,79 @@ function nearestBridge(lat, lng){
   return best;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   격자와 영토
+
+   도면은 territory 폴리곤 위에 cellM 격자를 깐다. 칸의 중심이 영토 안이면
+   그 칸은 국토다. 격자 원점은 폴리곤의 남서쪽 모서리 — 같은 좌표면 늘 같은 칸이 나온다.
+
+   점령 규칙은 둘로 나뉜다.
+     첫 발   개척. 한 번뿐이고, 그 칸이 열린다
+     반복   점유. 하루에 한 번만 세고, holdDays 만큼 쌓이면 칸이 꽉 찬다
+   반복을 그대로 점령으로 치면 늘 가던 데만 가는 게 최적이 된다. 그래서 넓히는 건
+   첫 발이고 반복은 지키는 힘이다. 남이 들어오면 지키는 힘이 쓰일 자리가 생긴다.
+   ───────────────────────────────────────────────────────────── */
+let _grid = null;
+function grid(){
+  if(_grid !== null) return _grid;
+  const T = CFG.territory;
+  if(!T || T.length < 3) return (_grid = false);
+  let la0=Infinity, la1=-Infinity, ln0=Infinity, ln1=-Infinity;
+  T.forEach(p => { la0=Math.min(la0,p[0]); la1=Math.max(la1,p[0]);
+                   ln0=Math.min(ln0,p[1]); ln1=Math.max(ln1,p[1]); });
+  const mLat = M_PER_DEG, mLng = M_PER_DEG*Math.cos((la0+la1)/2*Math.PI/180);
+  const dLat = CFG.cellM/mLat, dLng = CFG.cellM/mLng;
+  const rows = Math.ceil((la1-la0)/dLat), cols = Math.ceil((ln1-ln0)/dLng);
+  const cells = [], has = {};
+  for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+    const lat = la0 + (r+0.5)*dLat, lng = ln0 + (c+0.5)*dLng;
+    if(inPoly(lat,lng,T)){ const id = r+","+c; cells.push({ id,r,c,lat,lng }); has[id]=1; }
+  }
+  return (_grid = { la0,la1,ln0,ln1, mLat,mLng, dLat,dLng, rows,cols, cells, has });
+}
+/* 좌표가 속한 칸. 영토 밖이면 null.
+   칸은 "중심이 영토 안"일 때만 국토로 친다. 그러면 강을 따라 난 가장자리에
+   중심은 물 위인데 땅은 밟을 수 있는 자리가 생긴다 — 영토의 4.6% 가 그랬다.
+   둑길이 대부분 거기다. 그래서 영토 안인데 칸이 없으면 가장 가까운 칸으로 붙인다. */
+function cellAt(lat,lng){
+  const g = grid();
+  if(!g) return null;
+  const r = Math.floor((lat-g.la0)/g.dLat), c = Math.floor((lng-g.ln0)/g.dLng);
+  const id = r+","+c;
+  if(g.has[id]) return { id,r,c };
+  if(!inPoly(lat,lng,CFG.territory)) return null;
+  let best = null;
+  g.cells.forEach(x => {
+    const d = distM(lat,lng,x.lat,x.lng);
+    if(!best || d < best.d) best = { id:x.id, r:x.r, c:x.c, d };
+  });
+  return best ? { id:best.id, r:best.r, c:best.c, snapped:true } : null;
+}
+/* 그 칸을 며칠 밟았나 / 얼마나 찼나 */
+function held(p,id){ const s = (p && p.steps && p.steps[id]) || null; return s ? s.n : 0; }
+function fillOf(p,id){ return Math.min(1, held(p,id)/Math.max(1,CFG.holdDays)); }
+function terrStat(p){
+  const g = grid();
+  if(!g) return { total:0, opened:0, full:0 };
+  let opened=0, full=0;
+  g.cells.forEach(c => { const n = held(p,c.id); if(n>0) opened++; if(n>=CFG.holdDays) full++; });
+  return { total:g.cells.length, opened, full };
+}
+
 const FORBID_REASON = {
   apartment: "이곳은 국민의 주거지입니다. 헌법 제12조에 따라, 국민의 현관은 국경보다 엄격합니다.",
   military:  "이곳은 촬영과 출입이 제한된 구역입니다. 국경 심사를 진행하지 않습니다.",
   school:    "이곳은 학교입니다. 헌법 제12조에 따라, 심사는 교문 앞에서 멈춥니다.",
   hospital:  "이곳은 병원입니다. 헌법 제12조에 따라, 심사는 현관 앞에서 멈춥니다."
 };
+/* 국민에게 "국민의 주거지"는 남의 집처럼 들린다. 자기 집일 수 있다.
+   규칙은 같되, 국민에게는 그 규칙이 자기에게도 걸린다는 쪽으로 말한다. */
+const FORBID_HOME =
+  "이곳은 주거지입니다. 헌법 제12조에 따라, 국민의 현관은 국경보다 엄격합니다. 자기 집이라도 기록하지 않습니다.";
 function forbidBody(z){
-  return (z && FORBID_REASON[z.reason]) || FORBID_REASON.apartment;
+  const r = (z && z.reason) || "apartment";
+  if(r === "apartment" && isNational(S.pp)) return FORBID_HOME;
+  return FORBID_REASON[r] || FORBID_REASON.apartment;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -765,6 +1011,166 @@ function geoSelfTest(){
   return t;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   해 질 무렵
+
+   우두벌 일몰은 세계관의 중심 시각이고(과업 11), 측량에서 가장 자주 적히는
+   조건이기도 하다. 외부 스크립트를 쓰지 않는 앱이므로 직접 센다.
+   NOAA 간이식 — 분 단위 오차면 충분하다. 극지에서는 null 을 돌려준다.
+   ───────────────────────────────────────────────────────────── */
+function sunsetAt(lat, lng, date){
+  const rad = Math.PI/180, J1970 = 2440588, J2000 = 2451545, dayMs = 86400000;
+  const lw = rad * -lng, phi = rad * lat;
+  const d = date.valueOf()/dayMs - 0.5 + J1970 - J2000;
+  const n = Math.round(d - 0.0009 - lw/(2*Math.PI));
+  const ds = 0.0009 + lw/(2*Math.PI) + n;
+  const M = rad * (357.5291 + 0.98560028*ds);
+  const C = rad * (1.9148*Math.sin(M) + 0.02*Math.sin(2*M) + 0.0003*Math.sin(3*M));
+  const L = M + C + rad*102.9372 + Math.PI;
+  const dec = Math.asin(Math.sin(rad*23.4397) * Math.sin(L));
+  const cosW = (Math.sin(rad*-0.833) - Math.sin(phi)*Math.sin(dec)) / (Math.cos(phi)*Math.cos(dec));
+  if(!(cosW >= -1 && cosW <= 1)) return null;          // 백야 · 극야
+  const a = 0.0009 + (Math.acos(cosW) + lw)/(2*Math.PI) + n;
+  const Jset = J2000 + a + 0.0053*Math.sin(M) - 0.0069*Math.sin(2*L);
+  return new Date((Jset + 0.5 - J1970) * dayMs);
+}
+const hhmm = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
+/* 일몰을 셀 기준점. 경계가 있으면 그 중심, 없으면 내가 측량한 지점들의 평균.
+   둘 다 없으면 null — 없는 좌표를 지어내지 않는다 (일몰 줄이 그냥 안 뜬다). */
+function sunRef(){
+  if(CFG.boundary && CFG.boundary.length){
+    let a = 0, b = 0;
+    CFG.boundary.forEach(p => { a += p[0]; b += p[1]; });
+    return [a/CFG.boundary.length, b/CFG.boundary.length];
+  }
+  const l = ((S.pp && S.pp.survey) || []).filter(s => s.coord);
+  if(!l.length) return null;
+  let a = 0, b = 0;
+  l.forEach(s => { a += s.coord[0]; b += s.coord[1]; });
+  return [a/l.length, b/l.length];
+}
+
+/* ── 지금 ──
+   조건을 적어 둔 보고를 그때와 같은 시각에 다시 올린다.
+   조건을 받아만 두고 쓰지 않으면 적을 이유가 없다. 돌아올 이유는 이것뿐이다.
+
+   규칙은 한 줄이다.
+     그때가 일몰 전후였으면 → 오늘 일몰 전후에 올린다
+     아니면                → 시계로 ±1시간에 올린다
+   일몰 기준이 없으면(좌표 없음) 시계만 쓴다. 조건을 적지 않은 보고는 올리지 않는다. */
+const DUSK_M = 40, CLOCK_M = 60;
+function nowMatches(){
+  const p = S.pp;
+  const ref = sunRef(), n = now();
+  const todaySet = ref ? sunsetAt(ref[0], ref[1], n) : null;
+  const nowOff = todaySet ? (n - todaySet)/60000 : null;
+  const list = [];
+  ((p && p.survey) || []).forEach(s => {
+    if(!s.when) return;                                 // 조건을 적은 것만
+    const d = new Date(s.at);
+    if(todaySet != null && Math.abs(nowOff) <= DUSK_M && s.coord){
+      const was = sunsetAt(s.coord[0], s.coord[1], d);
+      if(was && Math.abs((d - was)/60000) <= DUSK_M){ list.push({ s, why:"해 질 무렵" }); return; }
+    }
+    const gap = Math.abs((n.getHours()*60 + n.getMinutes()) - (d.getHours()*60 + d.getMinutes()));
+    if(Math.min(gap, 1440-gap) <= CLOCK_M) list.push({ s, why:`${pad(d.getHours())}시쯤` });
+  });
+  return { list, sunset: todaySet };
+}
+
+/* ─────────────────────────────────────────────────────────────
+   도면
+
+   타일을 깔지 않는다. 위성사진이 박히는 순간 이 앱은 평범한 지도앱이 되고,
+   외부 스크립트를 쓰지 않는다는 원칙도 깨진다. 강과 격자와 점만 직접 그린다.
+   그러면 지도가 아니라 측량도면이 된다 — 국민증 다음 첫 화면으로 그게 맞다.
+
+   좌표는 미터로 눕혀 그린다. 선 굵기도 미터라 확대·축소에 상관없이 비율이 같다.
+   북쪽 한 변만 파선이다. 거기만 강이 아니라 내가 그은 선이기 때문이다.
+   ───────────────────────────────────────────────────────────── */
+function planSVG(p, hereCell){
+  /* "지금 선 칸" 표시는 오늘 것만 쓴다. 어제 밟은 자리를 지금 서 있는 것처럼 보이면 안 된다 */
+  const today = dayKey(new Date().toISOString());
+  const here = hereCell && hereCell.day === today ? hereCell : null;
+  const g = grid();
+  if(!g) return el("p",{ class:"note", text:"도면을 그릴 경계가 없습니다." });
+  const X = ln => (ln - g.ln0) * g.mLng;
+  const Y = la => (g.la1 - la) * g.mLat;
+  const W = Math.round((g.ln1-g.ln0)*g.mLng), H = Math.round((g.la1-g.la0)*g.mLat);
+  const PAD = 90;
+  const own = colorOf(p);
+  const n = v => Math.round(v*10)/10;
+
+  const T = CFG.territory;
+  const ring = T.map(q => `${n(X(q[1]))},${n(Y(q[0]))}`).join(" ");
+  /* 북쪽 선 — 위도가 가장 높은 변. 강이 아니므로 파선으로 구분해 그린다 */
+  const north = T.filter(q => q[0] >= g.la1 - 1e-9).sort((a,b)=>a[1]-b[1]);
+
+  const parts = [];
+  /* 땅 모양으로 오려낸다. 격자와 칸이 영토 밖으로 새면 그 순간 도면이 아니라 표가 된다 */
+  parts.push(`<defs><clipPath id="landClip"><polygon points="${ring}"/></clipPath></defs>`);
+  parts.push(`<polygon class="land" points="${ring}"/>`);
+
+  const cw = n(g.dLng*g.mLng), ch = n(g.dLat*g.mLat);
+  const inner = [];
+  /* 칸 — 아래에서 차오른다. "로딩칸"이므로 높이가 늘어야지 흐림이 바뀌면 안 된다 */
+  g.cells.forEach(c => {
+    const f = fillOf(p, c.id);
+    if(f <= 0) return;
+    const x = n(X(g.ln0 + c.c*g.dLng)), yTop = n(Y(g.la0 + (c.r+1)*g.dLat));
+    const done = f >= 1;
+    /* 찬 만큼만 칠하면 칸마다 막대가 따로 서서 막대그래프로 보인다.
+       밟은 칸 전체에 옅은 바탕을 깔아야 "차고 있는 한 칸"으로 읽힌다 */
+    if(!done) inner.push(`<rect class="own own-${own}" x="${x}" y="${yTop}"
+      width="${cw}" height="${ch}" fill="currentColor" opacity=".1"/>`);
+    inner.push(`<rect class="own own-${own}" x="${x}" y="${n(yTop + ch*(1-f))}"
+      width="${cw}" height="${n(ch*f)}" fill="currentColor" opacity="${done ? .6 : .36}"/>`);
+  });
+  /* 괘선 — 칸마다 네모가 아니라 가로세로로 길게 긋고 땅 모양으로 자른다 */
+  for(let r=0;r<=g.rows;r++){
+    const y = n(Y(g.la0 + r*g.dLat));
+    inner.push(`<line class="gl" x1="${n(X(g.ln0))}" y1="${y}" x2="${n(X(g.ln1))}" y2="${y}"/>`);
+  }
+  for(let c=0;c<=g.cols;c++){
+    const x = n(X(g.ln0 + c*g.dLng));
+    inner.push(`<line class="gl" x1="${x}" y1="${n(Y(g.la0))}" x2="${x}" y2="${n(Y(g.la1))}"/>`);
+  }
+  parts.push(`<g clip-path="url(#landClip)">${inner.join("\n")}</g>`);
+
+  parts.push(`<polygon class="edge" points="${ring}"/>`);   /* polyline 이면 합수머리 쪽이 안 닫힌다 */
+  if(north.length >= 2)
+    parts.push(`<line class="edge drawn" x1="${n(X(north[0][1]))}" y1="${n(Y(north[0][0]))}"
+                 x2="${n(X(north[north.length-1][1]))}" y2="${n(Y(north[north.length-1][0]))}"/>`);
+
+  /* 알려진 장소 — 작은 점. 내 측량점 — 빈 동그라미 */
+  SEED.forEach(s => parts.push(`<circle class="seed" cx="${n(X(s.c[1]))}" cy="${n(Y(s.c[0]))}" r="26"/>`));
+  ((p && p.survey) || []).forEach(s => { if(!s.coord) return;
+    parts.push(`<circle class="mine" cx="${n(X(s.coord[1]))}" cy="${n(Y(s.coord[0]))}" r="40"/>`); });
+  if(here){
+    const c = g.cells.filter(x => x.id === here.id)[0];
+    if(c) parts.push(`<rect class="here" x="${n(X(g.ln0 + c.c*g.dLng))+14}"
+      y="${n(Y(g.la0 + (c.r+1)*g.dLat))+14}" width="${cw-28}" height="${ch-28}"/>`);
+  }
+
+  const st = terrStat(p);
+  const box = el("div",{ class:"plan" });
+  box.innerHTML =
+    `<svg viewBox="${-PAD} ${-PAD} ${W+PAD*2} ${H+PAD*2}" role="img"
+       aria-label="우두국 국토 도면. 두 강으로 둘린 영토에 ${st.total}칸 격자가 깔려 있고 ${st.opened}칸을 밟았습니다.">
+       ${parts.join("\n")}
+     </svg>
+     <div class="north" aria-hidden="true">
+       <svg viewBox="0 0 12 18" fill="none" stroke="currentColor" stroke-width="1.1">
+         <path d="M6 17V3"/><path d="M2.6 6.4L6 2L9.4 6.4"/></svg>북</div>`;
+  box.appendChild(el("dl",{ class:"title-blk" },[
+    el("dt",{ text:"축척" }),   el("dd",{ text:`한 칸 ${CFG.cellM}m` }),
+    el("dt",{ text:"작성" }),   el("dd",{ text:dateStr(now()) }),
+    el("dt",{ class:"who", text:"측량자" }), el("dd",{ class:"who", text: p ? p.no : "—" })
+  ]));
+  return box;
+}
+
 /* ── 환율 — 시간본위제 ── */
 function gak(){
   const obs = (S.pp && S.pp.waits || []).concat(CFG.rate.seedObservations).filter(n => typeof n === "number");
@@ -784,21 +1190,39 @@ function issue(origin){
   });
 }
 const ROM = {
+  "우두동":"UDU",
   "효자동":"HYOJA","석사동":"SEOKSA","퇴계동":"TOEGYE","후평동":"HUPYEONG",
   "소양동":"SOYANG","감자국 (춘천 시내)":"GAMJAGUK","국외":"FOREIGN"
 };
 const ROM_VISA = {
   "단기관광비자":"TOURIST","관광비자":"TOURIST","체류비자":"RESIDENT",
-  "외교관 여권":"DIPLOMAT","월경자 越境者":"WOLGYEONGJA","미발급":"NONE"
+  "외교관 여권":"DIPLOMAT","월경자":"WOLGYEONGJA","미발급":"NONE",
+  "국민":"NATIONAL"
 };
 function mrz(pp){
+  const nat = isNational(pp);
   const base = ROM[pp.origin] || "SOMEORIGOL";
   const vis = ROM_VISA[currentVisa(pp).name] || "VISITOR";
-  const l1 = ("P<UDU" + base + "<<" + vis).padEnd(40,"<").slice(0,40);
-  const l2 = (pp.no.replace(/-/g,"") + "<2UDU").padEnd(38,"<").slice(0,38) + pad(pp.entries.length);
+  const l1 = ((nat ? "I<UDU" : "P<UDU") + base + "<<" + vis).padEnd(40,"<").slice(0,40);
+  const n = nat ? pp.survey.length : pp.entries.length;
+  const l2 = (pp.no.replace(/-/g,"") + "<2UDU").padEnd(38,"<").slice(0,38) + pad(n);
   return l1 + "\n" + l2;
 }
+
+/* 국민인가 — 우두동 출신은 국경을 건너지 않는다.
+   그래서 비자 등급이 성립하지 않고, 여권 대신 국민증을 받는다.
+   (설정집 §비자 등급은 "어떻게 들어왔나"를 묻는 체계라 국민에게는 질문 자체가 없다) */
+function isNational(pp){ return !!pp && pp.origin === HOME; }
+
+/* 신분증 이름. "여권"이 화면 곳곳에 박혀 있으면 국민에게 전부 어긋난다 */
+function idName(pp){ return isNational(pp || S.pp) ? "국민증" : "여권"; }
+
+/* 측량할 수 있는가 — 국민은 바로, 방문자는 입국한 뒤에.
+   들어오지 않은 나라의 국토를 재지는 않는다 */
+function canSurvey(pp){ return !!pp && (isNational(pp) || pp.entries.length > 0); }
+
 function currentVisa(pp){
+  if(isNational(pp)) return { visa:"—", name:"국민" };
   if(!pp || !pp.entries.length) return { visa:"—", name:"미발급" };
   const best = ROUTES.filter(r => r.rank === pp.bestRank)[0];
   return best ? { visa:best.visa, name:best.name } : { visa:"3급", name:"단기관광비자" };
@@ -846,6 +1270,7 @@ function render(){
   const app = document.getElementById("app");
   app.textContent = "";
   const fns = { border:scrBorder, issue:scrIssue, control:scrControl, exit:scrExit,
+                plan:scrPlan, survey:scrSurvey, surveyNew:scrSurveyNew,
                 passport:scrPassport, card:scrCard, missions:scrMissions, mission:scrMission };
   (fns[S.screen] || scrBorder)(app);
   app.appendChild(footer());
@@ -863,7 +1288,7 @@ function scrBorder(root){
     el("div",{ style:"text-align:center", html:flagSVG(132) }),
     el("div",{ style:"text-align:center" },[
       el("h1",{ style:"font-size:clamp(2.4rem,13vw,3.1rem);letter-spacing:.2em;text-indent:.2em;line-height:1.1", text:"우두국" }),
-      el("p",{ class:"eyebrow", style:"margin-top:.7rem", text:"牛頭國 · REPUBLIC OF UDU" })
+      el("p",{ class:"eyebrow", style:"margin-top:.7rem", text:"REPUBLIC OF UDU" })
     ]),
     el("p",{ style:"text-align:center;font-size:1.02rem;line-height:1.85",
              text:"다리를 건너야 들어올 수 있는 나라." }),
@@ -877,10 +1302,12 @@ function scrBorder(root){
     ]),
     el("hr",{ class:"rule" }),
     S.pp
-      ? el("button",{ class:"btn btn-primary", onclick:()=>go("passport"), text:"여권 열기" })
-      : el("button",{ class:"btn btn-primary", onclick:()=>go("issue"), text:"여권 발급받기" }),
+      ? el("button",{ class:"btn btn-primary", onclick:()=>go("passport"),
+                      text:`${idName()} 열기` })
+      /* 출신국을 묻기 전이라 여권인지 국민증인지 알 수 없다. 중립으로 둔다 */
+      : el("button",{ class:"btn btn-primary", onclick:()=>go("issue"), text:"신분 등록하기" }),
     S.pp ? null : el("p",{ class:"note", style:"text-align:center",
-        text:"발급은 즉시 끝납니다. 사진은 넣지 않아도 됩니다." })
+        text:"우두동 주민에게는 국민증이, 그 밖에는 여권이 발급됩니다. 즉시 끝납니다." })
   ]));
 }
 
@@ -894,15 +1321,27 @@ function scrIssue(root){
     ]);
     sel.appendChild(b);
   });
+  const picked = S.draft.origin;
+  const home = picked === HOME;
   root.appendChild(el("div",{ class:"stack" },[
-    el("p",{ class:"eyebrow", text:"우두국 입국관리소" }),
-    el("h2",{ style:"font-size:1.45rem;letter-spacing:.04em", text:"여권 발급" }),
+    el("p",{ class:"eyebrow", text: home ? "우두국 국토부" : "우두국 입국관리소" }),
+    /* 고르기 전에는 여권인지 국민증인지 알 수 없다. 모르는 것을 미리 말하지 않는다 */
+    el("h2",{ style:"font-size:1.45rem;letter-spacing:.04em",
+              text: !picked ? "신분 등록" : home ? "국민증 발급" : "여권 발급" }),
     el("hr",{ class:"rule" }),
-    el("p",{ class:"note", text:"출신국을 신고하십시오. 여권번호는 발급 시 자동으로 부여됩니다." }),
+    el("p",{ class:"note", text:"출신국을 신고하십시오. 번호는 발급 시 자동으로 부여됩니다." }),
     sel,
-    el("button",{ class:"btn btn-primary", onclick:()=>{
-      S.pp = issue(S.draft.origin); save(S.pp); go("passport");
-    }, text:"발급" }),
+    /* 우두동은 출신국이 아니라 본적이다. 국민은 입국 심사를 받지 않는다 */
+    home ? el("p",{ class:"note",
+      text:"우두동 주민에게는 여권 대신 국민증이 발급됩니다. 국민은 국경을 건너지 않으므로 입국 심사를 받지 않고, 비자 등급도 없습니다. 대신 국토를 측량합니다." }) : null,
+    /* 비활성 버튼 대신 안내 (화면설계 S5) */
+    !picked ? el("p",{ class:"note", text:"출신국을 고르면 발급 단추가 나타납니다." })
+      : el("button",{ class:"btn btn-primary", onclick:()=>{
+          S.pp = issue(picked); save(S.pp);
+          go("passport");      /* 발급한 신분증을 먼저 보여준다. 빈 칸이 동기다 */
+        }, text: home ? "국민증 발급" : "여권 발급" }),
+    home ? el("p",{ class:"note",
+      text:"발급이 끝나면 국토 도면이 열립니다. 아직 아무도 밟지 않은 땅입니다." }) : null,
     el("button",{ class:"lnk", onclick:()=>go("border"), text:"돌아가기" })
   ]));
 }
@@ -976,12 +1415,12 @@ function scrControl(root){
   }
   else if(c.phase === "stamp"){
     const wrap = el("div",{ class:"stamp-wrap", id:"swrap" });
-    wrap.appendChild(stampEl(c.route, c.date, false));
+    wrap.appendChild(stampEl(c.route && c.route.label, c.date, "entry"));
     stage.appendChild(wrap);
   }
   else if(c.phase === "approved"){
     stage.appendChild(el("div",{ style:"width:100%;display:flex;justify-content:center" },[
-      el("div",{ style:"transform:scale(.82);transform-origin:center" },[ stampEl(c.route, c.date, false) ])
+      el("div",{ style:"transform:scale(.82);transform-origin:center" },[ stampEl(c.route && c.route.label, c.date, "entry") ])
     ]));
   }
   else if(c.phase === "fail"){
@@ -1014,26 +1453,36 @@ function scrControl(root){
         text:`셔틀 대기 ${c.wait.min}분이 신고되었습니다. 오늘의 1각은 ${gak().min}분입니다.` }) : null,
       el("button",{ class:"btn btn-primary",
         onclick:()=>{ S.cardKind = "entry"; go("card"); }, text:"공유 카드 만들기" }),
-      el("button",{ class:"btn btn-quiet", onclick:()=>go("passport"), text:"여권 보기" })
+      el("button",{ class:"btn btn-quiet", onclick:()=>go("passport"), text:`${idName()} 보기` })
     ]));
   }
   if(c.phase === "fail"){
     root.appendChild(el("div",{ class:"stack", style:"margin-top:1.1rem" },[
       el("button",{ class:"btn", onclick:()=>startControl(), text:"다시 신고" }),
-      el("button",{ class:"btn btn-quiet", onclick:()=>go("passport"), text:"여권으로" })
+      el("button",{ class:"btn btn-quiet", onclick:()=>go("passport"), text:`${idName()}으로` })
     ]));
   }
 }
 
-function stampEl(route, d, exit){
-  const s = el("div",{ class:"stamp" + (exit ? " exit" : ""), id:"stamp" });
+/* 도장 세 종류. kind 가 "들어왔다 / 나갔다 / 쟀다"를 가른다.
+   sub 는 아래 작은 글씨 — 입국 경로, 출국 통과 지점, 측량 분류. */
+const STAMP_BIG = { entry:"입국", exit:"출국", survey:"측량" };
+function stampEl(sub, d, kind){
+  kind = STAMP_BIG[kind] ? kind : "entry";
+  const s = el("div",{ class:"stamp" + (kind === "entry" ? "" : " " + kind), id:"stamp" });
   s.appendChild(el("div",{ class:"stamp-in" },[
     el("div",{ html:hillWM() }),
-    el("div",{ class:"stamp-han", text:"牛頭國" }),
-    el("div",{ class:"stamp-big", text: exit ? "출국" : "입국" }),
+    el("div",{ class:"stamp-han", text:"우두국" }),
+    el("div",{ class:"stamp-big", text:STAMP_BIG[kind] }),
     el("div",{ class:"stamp-date", text:dateStr(d) }),
-    el("div",{ class:"stamp-sub", text: route ? route.label : "소양2교" })
+    el("div",{ class:"stamp-sub", text: sub || (kind === "survey" ? "국토" : "소양2교") })
   ]));
+  /* 측량 도장에만 붙는 등록 표식. 삼각점·눈금자도 받았지만 270px 에서 글자와 싸워 뺐다 */
+  if(kind === "survey") s.insertAdjacentHTML("beforeend",
+    `<svg class="stamp-reg" viewBox="0 0 300 200" fill="none" stroke="currentColor"
+       stroke-width="2.4" stroke-linecap="square" aria-hidden="true">
+       <path d="M26 44V26H44"/><path d="M256 26H274V44"/>
+       <path d="M26 156V174H44"/><path d="M256 174H274V156"/></svg>`);
   return s;
 }
 
@@ -1293,13 +1742,13 @@ function scrExit(root){
   }
   else if(c.phase === "stamp"){
     const wrap = el("div",{ class:"stamp-wrap", id:"swrap" });
-    wrap.appendChild(stampEl({ label:c.via }, c.date, true));
+    wrap.appendChild(stampEl(c.via, c.date, "exit"));
     stage.appendChild(wrap);
   }
   else if(c.phase === "report"){
     stage.appendChild(el("div",{ style:"width:100%;display:flex;justify-content:center" },[
       el("div",{ style:"transform:scale(.82);transform-origin:center" },[
-        stampEl({ label:c.via }, c.date, true) ])
+        stampEl(c.via, c.date, "exit") ])
     ]));
   }
   else if(c.phase === "fail"){
@@ -1342,39 +1791,506 @@ function scrExit(root){
       ]) : null,
       el("button",{ class:"btn btn-primary",
         onclick:()=>{ S.cardKind = "exit"; go("card"); }, text:"공유 카드 만들기" }),
-      el("button",{ class:"btn btn-quiet", onclick:()=>go("passport"), text:"여권 보기" })
+      el("button",{ class:"btn btn-quiet", onclick:()=>go("passport"), text:`${idName()} 보기` })
     ]));
   }
   if(c.phase === "fail"){
     root.appendChild(el("div",{ class:"stack", style:"margin-top:1.1rem" },[
       el("button",{ class:"btn", onclick:()=>startExit(), text:"다시 신고" }),
-      el("button",{ class:"btn btn-quiet", onclick:()=>go("passport"), text:"여권으로" })
+      el("button",{ class:"btn btn-quiet", onclick:()=>go("passport"), text:`${idName()}으로` })
     ]));
   }
 }
 
+/* ─────────────────────────────────────────────────────────────
+   S9 — 국토 측량
+
+   이 앱의 본편이다. 입국과 출국은 들어오고 나간 사실을 확인하는 의식이고,
+   측량은 모르는 것을 알아내는 일이다. 우두국은 아직 자기 땅을 모른다.
+
+   과업 20개가 닫힌 체크리스트라면 측량은 열린 지도다. 무엇을 적을지는
+   미리 정해두지 않는다. 다만 적는 것은 "장소"가 아니라 "장소 + 조건"이다 —
+   해 질 무렵에만 보이는 것, 농사철에는 못 들어가는 길, 어느 각도에서
+   소머리로 보이는가. 지도앱이 못 하는 자리가 거기다.
+
+   판정 순서는 입국과 같다. 다만 측량은 영토 안에서만 한다.
+     1 측량 시간 (헌법 제11조)
+     2 위치 권한 / 측량 실패
+     3 측위 정밀도 (maxAccM)
+     4 금지 구역 (헌법 제12조) — 국경보다 먼저 본다
+     5 영토 안인가
+
+   기록은 기기에만 남는다. 사진은 IndexedDB, 나머지는 localStorage.
+   전송 코드가 없다. 별점도 순위도 두지 않는다 — 측량은 평가가 아니라 관측이다.
+   ───────────────────────────────────────────────────────────── */
+function startSurvey(){
+  audio();                                   // 사용자 제스처 안에서 오디오 잠금 해제
+  S.sv = { phase:"locating", date: now(), kind:null, note:"", when:"", shot:null, res:null };
+  go("surveyNew");
+  runSurvey();
+}
+async function runSurvey(){
+  const c = S.sv;
+
+  if(!canSurvey(S.pp)){
+    return failOn(c, "아직 입국하지 않았습니다.",
+      "국토 측량은 입국한 뒤에 합니다. 들어오지 않은 나라의 땅을 재지는 않습니다.");
+  }
+
+  say("측량 지점을 확인하고 있습니다.");
+  const [res] = await Promise.all([ locate(), sleep(1200) ]);   // 최소 1.2초. 의식이 아니라 도구다
+  const sim = S.sim ? S.simCase : null;
+
+  if(sim === "hours" || !withinHours(c.date)){
+    return failOn(c, "측량 시간이 아닙니다.",
+      "국토 측량은 07시부터 21시까지 합니다. 헌법 제11조에 따라, 밤에는 국민이 잠듭니다.");
+  }
+  if(sim === "denied" || (!S.sim && !res.ok && res.code === "denied")){
+    return failOn(c, "위치 확인이 거부되었습니다.",
+      "좌표 없는 기록은 국토에 올리지 않습니다. 어디였는지 모르는 보고는 다시 찾아갈 수 없습니다.");
+  }
+  if(!S.sim && !res.ok){
+    return failOn(c, "측량에 실패했습니다.", "잠시 후 다시 시도하십시오.");
+  }
+
+  if(!S.sim){
+    if(res.acc > CFG.maxAccM){
+      return failOn(c, "측량 정밀도가 부족합니다.",
+        `오차가 약 ${Math.round(res.acc)}m 입니다. 이 정밀도로 기록하면 지점이 틀어집니다. 하늘이 보이는 곳에서 다시 시도하십시오.`);
+    }
+    /* 금지 구역이 국경보다 먼저다. 주거지 안의 "숨은 장소"는 기록하지 않는다 */
+    const zone = nearExcluded(res.lat, res.lng, res.acc || 0);
+    if(zone) return failOn(c, "이 구역은 측량하지 않습니다.", forbidBody(zone));
+
+    const ins = inside(res.lat, res.lng);
+    if(ins === null){
+      return failOn(c, "국경을 판정할 수 없습니다.",
+        "국경 좌표가 등록되지 않았습니다. 우두국은 확인되지 않은 지점을 국토에 올리지 않습니다.");
+    }
+    if(ins === false){
+      S.lastFix = { m: borderDistM(res.lat, res.lng), at: Date.now() };
+      return failOn(c, "여기는 우두국 영토가 아닙니다.",
+        `국경까지 약 ${S.lastFix.m}m 남았습니다. 국토 안에서 측량하십시오.`);
+    }
+    S.lastFix = { m:0, at: Date.now() };
+  }
+  if(sim === "out"){
+    return failOn(c, "여기는 우두국 영토가 아닙니다.", "국토 안에서 측량하십시오.");
+  }
+  if(sim === "forbid"){
+    return failOn(c, "이 구역은 측량하지 않습니다.", forbidBody(null));
+  }
+
+  c.res = res;
+  c.phase = "form"; render();
+  say("측량 지점이 확인되었습니다. 무엇을 보았는지 적으십시오.");
+}
+
+async function saveSurvey(){
+  const c = S.sv, p = S.pp;
+  const err = document.getElementById("svErr");
+  const note = (c.note || "").trim();
+  if(!c.kind || !note){
+    if(err) err.textContent = !c.kind ? "분류를 고르십시오." : "무엇을 보았는지 한 줄 적으십시오.";
+    say(err ? err.textContent : "");
+    return;
+  }
+  const at = now();
+  const id = "sv-" + at.getTime();
+  const r = c.res || {};
+  let shot = null;
+  if(c.shot) shot = (await putShot(id, c.shot)) ? id : null;
+
+  p.survey.push({
+    id, at: at.toISOString(), kind: c.kind, note,
+    when: (c.when || "").trim() || null,         // 조건 — 시각·계절·각도. 여기가 핵심이다
+    coord: r.ok ? [+r.lat.toFixed(6), +r.lng.toFixed(6)] : null,
+    accM:  r.ok ? Math.round(r.acc) : null,
+    shot
+  });
+  /* 측량한 자리는 당연히 밟은 자리다. 따로 또 누르게 하지 않는다 (같은 날 한 번 규칙은 그대로) */
+  if(r.ok){
+    const cell = cellAt(r.lat, r.lng);
+    if(cell){
+      const today = dayKey(at.toISOString());
+      const cur = p.steps[cell.id] || { n:0, first:null, last:null };
+      if(cur.last !== today){
+        cur.n += 1; cur.last = today; cur.first = cur.first || today;
+        p.steps[cell.id] = cur;
+      }
+      S.here = { id:cell.id, day:today };
+    }
+  }
+  save(p);
+
+  c.date = at;
+  c.phase = "stamp"; render();
+  dropStamp(`측량 도장이 발급되었습니다. ${kindOf(c.kind).label}. ${note}`);
+  await sleep(1400);                            // 입국의 3초보다 짧다. 자주 하는 일이다
+  go("survey");
+}
+
+/* S9-입력 */
+function scrSurveyNew(root){
+  const c = S.sv;
+  if(!c || !S.pp) return go("passport");
+
+  if(c.phase === "form"){
+    const r = c.res || {};
+    const body = el("div",{ class:"stack" });
+
+    body.appendChild(el("div",{},[
+      el("p",{ class:"eyebrow", text:"우두국 국토부" }),
+      el("h2",{ style:"font-size:1.45rem;letter-spacing:.04em;margin-top:.6rem", text:"측량 보고" }),
+      el("p",{ class:"coord", style:"margin-top:.6rem", text: r.ok
+        ? `${r.lat.toFixed(6)}, ${r.lng.toFixed(6)} · 오차 ${Math.round(r.acc)}m`
+        : "좌표 미확인 · 모의 측량" })
+    ]));
+    body.appendChild(el("hr",{ class:"rule" }));
+
+    /* 분류 — 고를 때 화면을 다시 그리지 않는다. 적던 글이 지워지면 안 된다 */
+    const marks = [];
+    const list = el("div",{ class:"stack-sm" });
+    SURVEY_KINDS.forEach(k => {
+      const b = el("button",{ class:"opt", "aria-pressed":String(c.kind === k.id),
+        onclick:()=>{ c.kind = k.id;
+          marks.forEach(x => x.b.setAttribute("aria-pressed", String(c.kind === x.id))); } },[
+        el("span",{ class:"mark" }),
+        el("span",{ style:"min-width:0" },[
+          el("span",{ style:"display:block;font-weight:700", text:k.label }),
+          el("span",{ style:"display:block;font-size:.78rem;opacity:.72;margin-top:.15rem", text:k.hint })
+        ])
+      ]);
+      marks.push({ id:k.id, b });
+      list.appendChild(b);
+    });
+    body.appendChild(el("div",{},[ el("span",{ class:"lbl", text:"분류" }), list ]));
+
+    const note = el("input",{ class:"fld", type:"text", maxlength:"60", id:"svNote",
+      placeholder:"예) 소머리가 보이는 자리", value:c.note,
+      "aria-label":"무엇을 보았는지 한 줄",
+      oninput:e => { c.note = e.target.value; } });
+    body.appendChild(el("div",{},[
+      el("label",{ class:"lbl", for:"svNote", text:"무엇을 보았습니까" }), note ]));
+
+    const when = el("input",{ class:"fld", type:"text", maxlength:"60", id:"svWhen",
+      placeholder:"예) 해 질 무렵 · 농사철에는 못 들어감", value:c.when,
+      "aria-label":"조건. 시각, 계절, 각도",
+      oninput:e => { c.when = e.target.value; } });
+    body.appendChild(el("div",{},[
+      el("label",{ class:"lbl", for:"svWhen", text:"조건 — 시각 · 계절 · 각도 (선택)" }), when,
+      el("p",{ class:"note", style:"margin-top:.4rem",
+        text:"지도에 없는 것은 장소가 아니라 조건입니다. 언제, 어디서 봐야 보이는지 적으십시오. "
+           + "조건을 적어 두면 같은 시각이 돌아올 때 여권 첫 화면에 다시 올려드립니다." })
+    ]));
+
+    const shots = el("div",{ class:"shots", style:"margin-top:.6rem" });
+    const finp = el("input",{ type:"file", accept:"image/*", id:"svShot",
+      onchange: async ev => {
+        const f = ev.target.files && ev.target.files[0];
+        if(!f) return;
+        const blob = await shrink(f);
+        if(!blob){ const e2 = document.getElementById("svErr");
+                   if(e2) e2.textContent = "사진을 읽을 수 없습니다."; return; }
+        c.shot = blob;
+        shots.textContent = "";
+        const img = el("img",{ alt:"측량 사진" });
+        img.src = URL.createObjectURL(blob);
+        shots.appendChild(img);
+      } });
+    body.appendChild(el("div",{},[
+      el("span",{ class:"lbl", text:"사진 (선택)" }),
+      el("label",{ class:"filelbl", for:"svShot" },[ el("span",{ text:"사진 추가" }), finp ]),
+      shots
+    ]));
+
+    /* 좌표가 아직 없으면 금지 구역을 검사할 대상 자체가 없다. 보호 장치가 꺼져 있다는 걸
+       숨기지 않는다 — 답사 나간 사람이 아파트 단지 앞에서 이 문장을 봐야 한다 (헌법 제12조) */
+    if(!(CFG.excluded||[]).length && r.ok) body.appendChild(el("p",{ class:"note", style:"font-weight:700",
+      text:"금지 구역 판정이 꺼져 있습니다. 경계 좌표가 아직 등록되지 않아 앱이 막아 주지 못합니다. 아파트 단지·학교·병원·군 시설 안에서는 직접 피해 주십시오." }));
+    body.appendChild(el("p",{ class:"note",
+      text:"사유지와 경작지 안에서는 측량하지 않습니다. 길에서 보이는 것만 적습니다. 사진은 이 기기에만 저장되고 어디에도 전송되지 않습니다." }));
+    body.appendChild(el("p",{ class:"note", id:"svErr", style:"font-weight:700" }));
+    body.appendChild(el("button",{ class:"btn btn-primary", onclick:saveSurvey, text:"등록" }));
+    body.appendChild(el("button",{ class:"btn btn-quiet",
+      onclick:()=>go(S.pp.survey.length ? "survey" : "passport"), text:"취소" }));
+    root.appendChild(body);
+    return;
+  }
+
+  const stage = el("div",{ class:"stage" + (c.phase === "locating" ? " dark" : ""), id:"stage" });
+  if(c.phase === "locating"){
+    stage.appendChild(el("div",{ class:"stack-sm" },[
+      el("div",{ html:`<svg class="surveyor" viewBox="0 0 100 100" aria-hidden="true"><g>
+        <path d="M50 10 L50 90 M10 50 L90 50" stroke="rgba(250,247,240,.35)" stroke-width="1"/>
+        <circle cx="50" cy="50" r="34" fill="none" stroke="rgba(250,247,240,.5)" stroke-width="1.5"/>
+        <path d="M50 16 L58 28 L42 28 Z" fill="#FAF7F0"/></g></svg>` }),
+      el("p",{ style:"letter-spacing:.3em;font-size:.98rem;margin-top:.8rem", text:"측량 지점 확인 중" })
+    ]));
+  }
+  else if(c.phase === "stamp"){
+    const wrap = el("div",{ class:"stamp-wrap", id:"swrap" });
+    wrap.appendChild(stampEl(kindOf(c.kind).label, c.date, "survey"));
+    stage.appendChild(wrap);
+  }
+  else if(c.phase === "fail"){
+    stage.appendChild(el("div",{ class:"stack", style:"text-align:left;width:100%" },[
+      el("p",{ class:"eyebrow", style:"text-align:center", text:"측량 불가" }),
+      el("p",{ style:"font-size:1.08rem;font-weight:700;line-height:1.6;text-align:center", text:c.failTitle }),
+      el("hr",{ class:"rule" }),
+      el("p",{ class:"note", text:c.failBody })
+    ]));
+  }
+  root.appendChild(el("div",{ class:"stack" },[ stage ]));
+
+  if(c.phase === "fail"){
+    root.appendChild(el("div",{ class:"stack", style:"margin-top:1.1rem" },[
+      el("button",{ class:"btn", onclick:()=>startSurvey(), text:"다시 측량" }),
+      el("button",{ class:"btn btn-quiet", onclick:()=>go("passport"), text:`${idName()}으로` })
+    ]));
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   S10 — 도면 (영토)
+
+   밟기는 측량보다 가벼운 행위다. 한 번 누르면 지금 선 칸이 하루치 쌓인다.
+   같은 칸은 하루에 한 번만 센다 — "많이 간 만큼"이 실제로 여러 날 갔다는 뜻이어야 한다.
+   판정 순서는 다른 화면과 같고, 영토는 territory 로 본다 (좌표가 이미 있다).
+   ───────────────────────────────────────────────────────────── */
+async function stepHere(){
+  audio();
+  const p = S.pp;
+  /* 노드를 미리 잡아두면 안 된다 — render() 가 지나가면 그건 떨어져 나간 노드다 */
+  const say2 = t => { const b = document.getElementById("stepNote"); if(b) b.textContent = t; say(t); };
+  if(!canSurvey(p)) return say2("입국한 뒤에 밟을 수 있습니다.");
+  const sim0 = S.sim ? S.simCase : null;
+  if(sim0 === "hours" || !withinHours(now()))
+    return say2("밟기는 07시부터 21시까지 셉니다. 헌법 제11조에 따라, 밤에는 국민이 잠듭니다.");
+
+  say2("발 디딘 자리를 확인하고 있습니다.");
+  const res = await locate();
+  const sim = S.sim ? S.simCase : null;
+  if(sim === "denied" || (!res.ok && res.code === "denied"))
+    return say2("위치 확인이 거부되었습니다. 밟은 자리를 셀 수 없습니다.");
+  if(!res.ok) return say2("위치를 확인할 수 없습니다. 잠시 후 다시 시도하십시오.");
+  if(res.acc > CFG.maxAccM)
+    return say2(`측량 오차가 약 ${Math.round(res.acc)}m 입니다. 이 정밀도로는 칸을 가릴 수 없습니다.`);
+  const zone = sim === "forbid" ? {} : nearExcluded(res.lat, res.lng, res.acc || 0);
+  if(zone) return say2("이 구역은 세지 않습니다. " + forbidBody(zone.reason ? zone : null));
+  if(sim === "out") return say2("여기는 우두국 영토가 아닙니다.");
+
+  const cell = cellAt(res.lat, res.lng);
+  if(!cell) return say2("여기는 우두국 영토가 아닙니다. 국토 안에서 밟아 주십시오.");
+
+  const today = dayKey(new Date().toISOString());
+  p.steps = p.steps || {};
+  const cur = p.steps[cell.id] || { n:0, last:null, first:null };
+  if(cur.last === today){
+    S.here = { id:cell.id, day:today }; render();
+    return say2(`오늘은 이 칸을 이미 셌습니다. ${held(p,cell.id)}일 / ${CFG.holdDays}일.`);
+  }
+  const fresh = cur.n === 0;
+  cur.n += 1; cur.last = today; cur.first = cur.first || today;
+  p.steps[cell.id] = cur;
+  save(p);
+  S.here = { id:cell.id, day:today };
+
+  const now2 = cur.n, full = now2 >= CFG.holdDays;
+  thunk(); buzz();                                    // 소리·진동·텍스트 3중
+  render();
+  say2(fresh ? `처음 밟은 칸입니다. 개척되었습니다. 1일 / ${CFG.holdDays}일.`
+      : full  ? `이 칸이 꽉 찼습니다. ${now2}일 / ${CFG.holdDays}일.`
+              : `${now2}일 / ${CFG.holdDays}일.`);
+}
+
+function scrPlan(root){
+  const p = S.pp;
+  if(!p) return go("border");
+  const st = terrStat(p), own = colorOf(p);
+  const pct = st.total ? Math.round(st.opened/st.total*100) : 0;
+
+  root.appendChild(el("div",{ class:"stack" },[
+    el("p",{ class:"eyebrow", text:"우두국 국토부" }),
+    el("div",{ class:"terr" },[
+      el("h2",{ style:"font-size:1.45rem;letter-spacing:.04em", text:"국토 도면" }),
+      el("b",{ text:`${st.opened} / ${st.total}칸` })
+    ]),
+    planSVG(p, S.here),
+    el("p",{ class:"note", text:
+      `개척 ${st.opened}칸 · 점유 완료 ${st.full}칸 · 미답 ${st.total-st.opened}칸. 국토의 ${pct}%에 발을 디뎠습니다.` }),
+
+    el("button",{ class:"btn btn-primary", onclick:stepHere, text:"여기를 밟는다" }),
+    el("p",{ class:"note", id:"stepNote", "aria-live":"polite",
+      text:`같은 칸은 하루에 한 번만 셉니다. ${CFG.holdDays}일을 채우면 칸이 꽉 찹니다.` }),
+
+    el("hr",{ class:"rule" }),
+    el("div",{},[
+      el("span",{ class:"lbl", text:"영토색" }),
+      el("div",{ class:"swatch" }, COLORS.map(c => {
+        return el("button",{ "aria-pressed":String(own === c.id),
+          onclick:()=>{ p.color = c.id; save(p); render(); } },
+          [ el("i",{ class:"own-"+c.id }), el("span",{ text:c.name }) ]);
+      }))
+    ]),
+
+    el("hr",{ class:"rule" }),
+    el("button",{ class:"btn", onclick:()=>go("survey"),
+      text:`국토 측량  ${p.survey.length}건` }),
+    el("p",{ class:"note", text:
+      `작은 점 ${SEED.length}곳은 이미 알려진 자리입니다. 빈 동그라미는 당신이 측량해 올린 자리입니다.` }),
+    el("button",{ class:"lnk", onclick:()=>go("passport"), text:`${idName(p)}으로` }),
+    el("p",{ class:"foot", style:"text-align:left",
+      text:"경계의 강과 알려진 장소: OpenStreetMap 기여자 (ODbL). 북쪽 경계선은 임의로 그은 것입니다." })
+  ]));
+}
+
+/* S9-목록 — 지금까지 잰 국토 */
+function scrSurvey(root){
+  const p = S.pp;
+  if(!p) return go("border");
+  const all = p.survey.slice().reverse();          // 최신순
+
+  const head = el("div",{ class:"stack" },[
+    el("p",{ class:"eyebrow", text:"우두국 국토부" }),
+    el("div",{ style:"display:flex;align-items:baseline;justify-content:space-between;gap:1rem" },[
+      el("h2",{ style:"font-size:1.45rem;letter-spacing:.04em", text:"국토 측량" }),
+      el("p",{ style:"font-size:1.3rem;font-weight:700;font-variant-numeric:tabular-nums",
+               text:`${all.length}건` })
+    ]),
+    el("hr",{ class:"rule" })
+  ]);
+  root.appendChild(head);
+
+  if(all.length){
+    const tally = el("div",{ class:"tally" });
+    SURVEY_KINDS.forEach(k => tally.appendChild(el("div",{},[
+      el("span",{ text:k.label }),
+      el("b",{ text:String(p.survey.filter(s => s.kind === k.id).length) })
+    ])));
+    head.appendChild(tally);
+  }
+
+  head.appendChild(el("button",{ class:"btn btn-primary", onclick:startSurvey,
+    text:"지금 여기를 측량한다" }));
+
+  if(!all.length){
+    head.appendChild(el("p",{ class:"note", style:"line-height:1.8",
+      text:"아직 측량된 국토가 없습니다. 우두국은 자기 땅을 모릅니다. "
+         + "걸어 다니며 눈에 들어온 것을 한 줄씩 적어 주십시오. "
+         + "언제 봐야 보이는지를 함께 적어 두면, 그 시각이 돌아올 때 다시 알려드립니다. "
+         + "기록은 이 기기에만 남고 어디에도 전송되지 않습니다." }));
+  } else {
+    const rows = el("div",{ class:"stack-sm" });
+    all.forEach(r => rows.appendChild(svRow(r)));
+    head.appendChild(rows);
+  }
+
+  head.appendChild(el("button",{ class:"lnk", onclick:()=>go("passport"),
+    text: isNational(p) ? "국민증으로" : "여권으로" }));
+}
+
+/* 홈에 올라오는 "지금" 블록. 맞는 게 없으면 아예 뜨지 않는다 — 0곳을 매번 보여주면 소음이다 */
+function nowBlock(){
+  const { list, sunset } = nowMatches();
+  if(!list.length) return null;
+  const box = el("div",{},[
+    el("p",{ class:"eyebrow", text:"지금" }),
+    el("p",{ class:"note", style:"margin:.5rem 0 .7rem",
+      text:`지금과 같은 시각에 적어 둔 자리가 ${list.length}곳 있습니다.`
+         + (sunset ? ` 오늘 일몰은 ${hhmm(sunset)}입니다.` : "") })
+  ]);
+  const rows = el("div",{ class:"stack-sm" });
+  list.slice(0,3).forEach(m => rows.appendChild(el("div",{ class:"sv" },[
+    el("div",{ class:"b" },[
+      el("p",{ class:"t" },[ kindIcon(m.s.kind), el("span",{ text:m.s.note }) ]),
+      el("p",{ class:"w", text:m.s.when }),
+      el("p",{ class:"m",
+        text:`${kindOf(m.s.kind).label} · ${m.why} · ${dateStr(new Date(m.s.at)).slice(5)} 기록` })
+    ])
+  ])));
+  box.appendChild(rows);
+  if(list.length > 3) box.appendChild(el("p",{ class:"note", style:"margin-top:.5rem",
+    text:`그 밖에 ${list.length - 3}곳이 더 있습니다.` }));
+  return box;
+}
+
+function svRow(r){
+  const d = new Date(r.at);
+  const del = el("button",{ class:"x", text:"삭제",
+    "aria-label":`${r.note} 측량 보고 삭제` });
+  del.addEventListener("click", () => {
+    /* 두 번 눌러야 지워진다. 들에서 잘못 누르는 일이 잦다 */
+    if(del.dataset.armed !== "1"){
+      del.dataset.armed = "1"; del.textContent = "삭제 확인"; return;
+    }
+    S.pp.survey = S.pp.survey.filter(x => x.id !== r.id);
+    save(S.pp); render();
+    say("측량 보고를 삭제했습니다.");
+  });
+
+  const kids = [];
+  if(r.shot){
+    const img = el("img",{ alt:`${r.note} 측량 사진` });
+    /* 기기 저장소가 비워졌으면 사진이 없다. 깨진 이미지 아이콘을 남기지 않는다 */
+    getShot(r.shot).then(b => { if(b) img.src = URL.createObjectURL(b); else img.remove(); });
+    kids.push(img);
+  }
+  /* 적은 한 줄이 머리글이다. 분류는 픽토그램으로 앞에 세우고 이름은 아래 줄로 내린다 */
+  kids.push(el("div",{ class:"b" },[
+    el("p",{ class:"t" },[ kindIcon(r.kind), el("span",{ text:r.note }) ]),
+    r.when ? el("p",{ class:"w", text:r.when }) : null,
+    el("p",{ class:"m",
+      text:`${kindOf(r.kind).label} · ${timeStr(d)}${r.accM != null ? ` · 오차 ${r.accM}m` : ""}` })
+  ]));
+  kids.push(del);
+  return el("div",{ class:"sv" }, kids);
+}
+
 /* S4 — 여권 홈 */
+const CELL_REG = `<svg class="cell-reg" viewBox="0 0 64 64" fill="none" stroke="currentColor"
+  stroke-width="1.8" stroke-linecap="square" aria-hidden="true">
+  <path d="M14 22V14H22"/><path d="M42 14H50V22"/>
+  <path d="M14 42V50H22"/><path d="M42 50H50V42"/></svg>`;
 function scrPassport(root){
   const pp = S.pp;
   if(!pp) return go("border");
   const v = currentVisa(pp);
   const g = gak();
   const hint = borderHint();
+  const nat = isNational(pp);
+  const last = lastOf(pp.survey);
+  const ts = terrStat(pp);
+  const ref = sunRef();
+  const sunset = ref ? sunsetAt(ref[0], ref[1], now()) : null;
+  const nb = nowBlock();
 
+  /* 국민증의 지면은 입국이 아니라 측량으로 채워진다.
+     국민은 국경을 건너지 않으므로 찍을 입국 도장이 없다 */
+  const marks = nat ? pp.survey.slice(-8).reverse() : pp.entries.slice(0,8);
   const cells = el("div",{ class:"grid-stamps" });
   for(let i=0;i<8;i++){
-    const e = pp.entries[i];
-    cells.appendChild(el("div",{ class:"cell" + (e ? " on" : "") },
-      e ? [ el("span",{ text:`${dateStr(new Date(e.at)).slice(5)}\n${e.visa}` }) ]
-        : [ el("span",{ text:"—" }) ]));
+    const m = marks[i];
+    /* 픽토그램은 흐린 묵색으로 둔다. 주인색이 여덟 칸으로 번지면 도장 3초가 싸진다 */
+    const ico = nat ? kindIcon(m && m.kind, "faint") : null;
+    const cell = el("div",{ class:"cell" + (m ? " on" : "") },
+      m ? [ ico,
+            /* 픽토그램이 들어간 칸에는 분류 이름을 겹쳐 쓰지 않는다. 64px 에 세 줄은 과하다 */
+            el("span",{ text: ico ? dateStr(new Date(m.at)).slice(5)
+                                  : `${dateStr(new Date(m.at)).slice(5)}\n${nat ? kindOf(m.kind).label : m.visa}` }) ]
+        : [ el("span",{ text:"—" }) ]);
+    if(!m) cell.insertAdjacentHTML("afterbegin", CELL_REG);
+    cells.appendChild(cell);
   }
 
   root.appendChild(el("div",{ class:"stack" },[
     el("div",{ style:"display:flex;align-items:center;gap:.7rem" },[
       el("div",{ html:flagSVG(46) }),
       el("div",{},[
-        el("p",{ style:"font-size:1.05rem;font-weight:700;letter-spacing:.18em", text:"우두국 여권" }),
-        el("p",{ class:"eyebrow", style:"margin-top:.25rem", text:"PASSPORT" })
+        el("p",{ style:"font-size:1.05rem;font-weight:700;letter-spacing:.18em",
+                 text: nat ? "우두국 국민증" : "우두국 여권" }),
+        el("p",{ class:"eyebrow", style:"margin-top:.25rem",
+                 text: nat ? "NATIONAL ID" : "PASSPORT" })
       ])
     ]),
     el("hr",{ class:"rule" }),
@@ -1385,35 +2301,64 @@ function scrPassport(root){
           <circle cx="50" cy="34" r="19" fill="rgba(43,43,40,.22)"/>
           <path d="M12 100C12 78 29 62 50 62C71 62 88 78 88 100Z" fill="rgba(43,43,40,.22)"/></svg>` }),
         el("div",{ class:"meta" },[
-          el("div",{},[ el("p",{ class:"k", text:"여권번호 / NO." }), el("p",{ class:"v", text:pp.no }) ]),
-          el("div",{},[ el("p",{ class:"k", text:"출신국 / ORIGIN" }), el("p",{ class:"v", text:pp.origin }) ]),
-          el("div",{},[ el("p",{ class:"k", text:"비자 / VISA" }),
-                        el("p",{ class:"v", style:"color:var(--river)", text:`${v.visa} · ${v.name}` }) ])
+          el("div",{},[ el("p",{ class:"k", text: nat ? "등록번호 / NO." : "여권번호 / NO." }),
+                        el("p",{ class:"v", text:pp.no }) ]),
+          el("div",{},[ el("p",{ class:"k", text: nat ? "본적 / ORIGIN" : "출신국 / ORIGIN" }),
+                        el("p",{ class:"v", text:pp.origin }) ]),
+          /* 국민에게는 등급이 없다. 비자는 "어떻게 들어왔나"를 묻는 체계다 */
+          el("div",{},[ el("p",{ class:"k", text: nat ? "자격 / STATUS" : "비자 / VISA" }),
+                        el("p",{ class:"v", style:"color:var(--river)",
+                                 text: nat ? "국민" : `${v.visa} · ${v.name}` }) ])
         ])
       ]),
       el("hr",{ class:"rule", style:"margin:.9rem 0" }),
       el("p",{ class:"mrz", text:mrz(pp) })
     ]),
 
-    el("p",{ class:"eyebrow", text:`입국 기록 ${pp.entries.length}` }),
+    el("p",{ class:"eyebrow",
+      text: nat ? `측량 기록 ${pp.survey.length}` : `입국 기록 ${pp.entries.length}` }),
     cells,
-    pp.exits.length ? el("p",{ class:"note",
+    /* 칸에는 날짜와 분류만 들어간다. 무엇을 적었는지가 안 보이면 수집장이 비어 보인다 */
+    last ? el("p",{ class:"note", style:"line-height:1.6" },[
+      el("span",{ text:`최근 측량 · ${last.note}` }),
+      last.when ? el("span",{ style:"color:var(--river)", text:` · ${last.when}` }) : null
+    ]) : null,
+    !nat && pp.exits.length ? el("p",{ class:"note",
       text:`출국 기록 ${pp.exits.length}건. 최근 출국 ${dateStr(new Date(lastOf(pp.exits).at))}.` }) : null,
+    !nat && pp.survey.length ? el("p",{ class:"note",
+      text:`국토 측량 ${pp.survey.length}건.` }) : null,
+
+    /* 조건을 적어 둔 자리가 "지금"에 해당하면 여기로 올라온다 */
+    nb ? el("hr",{ class:"rule" }) : null,
+    nb,
 
     el("hr",{ class:"rule" }),
     el("div",{ class:"rate" },[
       el("span",{ text:"오늘의 1각" }),
       el("b",{ text:`${g.min}분${g.seeded ? "" : " (공식)"}` })
     ]),
+    sunset ? el("div",{ class:"rate" },[
+      el("span",{ text:"오늘 일몰" }),
+      el("b",{ text:hhmm(sunset) })
+    ]) : null,
     el("p",{ class:"note", text: g.seeded
       ? "신고된 대기 시간의 중간값입니다. 길어지면 화폐 가치가 떨어집니다."
       : "아직 신고가 없어 공식 환율을 표시합니다. 셔틀 대기 시간을 신고하면 갱신됩니다." }),
 
     el("hr",{ class:"rule" }),
-    /* 국경 밖이라면 버튼이 거리를 알려준다 — 비활성 대신 정보 제공 (화면설계 S5).
-       마지막 측량이 있을 때만이므로 좌표를 채우기 전에는 평소 문구 그대로다 */
-    el("button",{ class:"btn btn-primary", onclick:startControl,
-      text: hint ? `입국 심사 받기 · 국경까지 ${hint}` : "입국 심사 받기" }),
+    /* 국민에게는 측량이 으뜸 버튼이다. 국민은 입국도 출국도 하지 않는다.
+       방문자에게는 입국이 먼저고, 들어온 뒤에 측량이 열린다 */
+    nat ? null :
+      /* 국경 밖이라면 버튼이 거리를 알려준다 — 비활성 대신 정보 제공 (화면설계 S5).
+         마지막 측량이 있을 때만이므로 좌표를 채우기 전에는 평소 문구 그대로다 */
+      el("button",{ class:"btn btn-primary", onclick:startControl,
+        text: hint ? `입국 심사 받기 · 국경까지 ${hint}` : "입국 심사 받기" }),
+    /* 국민에게는 도면이 본진이다. 측량은 그 안에서 간다 */
+    canSurvey(pp) ? el("button",{ class: nat ? "btn btn-primary" : "btn",
+      onclick:()=>go("plan"),
+      text:`국토 도면  ${ts.opened} / ${ts.total}칸` }) : null,
+    canSurvey(pp) ? el("button",{ class:"btn", onclick:()=>go("survey"),
+      text:`국토 측량  ${pp.survey.length}건` }) : null,
     /* 출국은 체류 중인 여권에만 열린다. 입국 기록이 없으면 버튼 자체가 없다 */
     staying(pp) ? el("button",{ class:"btn", onclick:startExit,
       text: hint && S.lastFix.m > (CFG.exitBandM || 1000)
@@ -1440,11 +2385,11 @@ function simPanel(){
       html:"지오펜스 좌표가 아직 비어 있어 실제 국경 판정을 하지 않습니다. 답사 후 <b>CFG.boundary</b>를 채우면 모의 모드가 꺼집니다. 아래로 심사 분기를 강제할 수 있습니다." }),
     grid,
     el("p",{ class:"note", style:"margin-top:.6rem",
-      text:"입국과 출국 양쪽에 적용됩니다. 영토 판정 분기는 뜻이 뒤집혀, 입국에서는 “국경 밖”, 출국에서는 “아직 영토 안”으로 나타납니다." }),
+      text:"입국 · 출국 · 측량 모두에 적용됩니다. 영토 판정 분기는 출국에서만 뜻이 뒤집혀, 입국과 측량에서는 “국경 밖”, 출국에서는 “아직 영토 안”으로 나타납니다." }),
     el("button",{ class:"lnk", style:"margin-top:.6rem", onclick:()=>{
       try{ localStorage.removeItem(KEY); }catch(e){}
       S.pp = null; go("border");
-    }, text:"여권 분실 신고 (초기화)" }),
+    }, text:`${idName()} 분실 신고 (초기화)` }),
     el("hr",{ class:"rule" }),
     diagPanel()
   ]);
@@ -1493,7 +2438,7 @@ function scrCard(root){
     el("p",{ class:"eyebrow", text: ex ? "출국 카드" : "입국 카드" }),
     box,
     actions,
-    el("button",{ class:"lnk", onclick:()=>go("passport"), text:"여권으로" })
+    el("button",{ class:"lnk", onclick:()=>go("passport"), text:`${idName()}으로` })
   ]));
 
   drawCard(cv).then(() => {
@@ -1530,13 +2475,17 @@ async function drawCard(cv){
   for(let j=0;j<H;j+=16){ x.beginPath(); x.moveTo(0,j+.5); x.lineTo(W,j+.5); x.stroke(); }
   x.globalAlpha = 1;
 
-  // 국기
+  /* 국기 — flagSVG() 와 같은 도형. 540x360 과 114x76 이 둘 다 3:2 라
+     가로세로 배율이 같고, 그래서 arc 가 타원으로 찌그러지지 않는다 */
   const fw = 114, fh = 76, fx = (W-fw)/2, fy = P;
-  x.fillStyle = paper; x.fillRect(fx,fy,fw,fh);
-  x.fillStyle = river; x.fillRect(fx,fy,fw*.2,fh); x.fillRect(fx+fw*.8,fy,fw*.2,fh);
   x.save(); x.translate(fx,fy); x.scale(fw/540,fh/360);
-  x.translate(101.25,63); x.scale(3.375,3.375);
-  x.fillStyle = hill; x.fill(new Path2D(HILL)); x.restore();
+  x.fillStyle = paper; x.fillRect(0,0,540,360);
+  x.fillStyle = hill; x.beginPath(); x.arc(270,180,105,0,Math.PI*2); x.fill();
+  x.fillStyle = river; x.fillRect(0,248,540,112);
+  x.restore();
+  /* 테두리는 배율 밖에서 긋는다. 안에서 그으면 선 굵기까지 0.21배가 되어 사라진다 */
+  x.strokeStyle = withA(ink,.24); x.lineWidth = 1;
+  x.strokeRect(fx+.5, fy+.5, fw-1, fh-1);
 
   x.textAlign = "center"; x.fillStyle = ink;
   x.font = F(700,86); x.fillText(spaced("우두국",.16), W/2, fy+fh+112);
@@ -1563,7 +2512,7 @@ async function drawCard(cv){
   x.fillStyle = seal; x.fill(new Path2D(HILL));
   x.restore();
   x.fillStyle = seal; x.textAlign = "center";
-  x.font = F(400,29*k); x.fillText(spaced("牛頭國",.5), 0, -104*k);
+  x.font = F(400,29*k); x.fillText(spaced("우두국",.5), 0, -104*k);
   x.font = F(700,124*k); x.fillText(spaced(ex ? "출국" : "입국",.17), 0, 24*k);
   const sDate = ex ? ex.at : (en.at || Date.now());
   x.font = F(400,40*k); x.fillText(dateStr(new Date(sDate)), 0, 88*k);
@@ -1605,7 +2554,7 @@ async function drawCard(cv){
     if(i){ x.strokeStyle = withA(ink,.22); line(x,P+cw*i,ty-46,P+cw*i,ty+66); }
     x.fillStyle = withA(ink,.7); x.font = F(400,19);
     x.fillText(spaced(s[0],.22), cx2, ty-16);
-    /* "공훈 · 월경자 越境者"가 칸을 꽉 채운다. 폰트가 대체체로 떨어지면 넘치므로 재어서 줄인다 */
+    /* 제일 긴 값은 "공훈 · 월경자". 폰트가 대체체로 떨어지면 넘치므로 재어서 줄인다 */
     x.fillStyle = i===2 ? river : ink;
     let fs = i===2 ? 34 : 42;
     x.font = F(700,fs);
@@ -1706,9 +2655,14 @@ function scrMissions(root){
     ]),
     el("hr",{ class:"rule" }),
     list,
+    /* 국민에게는 입국·출국 과업이 성립하지 않는다. 숨기지 않고 그렇다고 적는다.
+       과업 목록 자체는 측량이 쌓인 뒤에 다시 쓸 예정이다 (방향전환 메모 4단계) */
+    isNational(S.pp) ? el("p",{ class:"note",
+      text:"입국 과업(1~4)과 출국 과업(20)은 국민에게 해당하지 않습니다. 국민은 국토 측량으로 기여합니다." }) : null,
     geoReady() ? null : el("p",{ class:"note",
       text:"위치로 인증하는 과업은 답사로 좌표를 확정한 뒤 열립니다. 지금은 모의로만 완료할 수 있습니다." }),
-    el("button",{ class:"lnk", onclick:()=>go("passport"), text:"여권으로" })
+    el("button",{ class:"lnk", onclick:()=>go("passport"),
+      text: isNational(S.pp) ? "국민증으로" : "여권으로" })
   ]));
 }
 
@@ -1735,7 +2689,10 @@ function scrMission(root){
     body.appendChild(el("hr",{ class:"rule" }));
     body.appendChild(el("p",{ class:"note", text: m.pending || m.how || "" }));
     if(!ok && !m.pending){
-      const cta = m.cta || { label:"입국 심사 받기", run:startControl };
+      const cta = m.cta || { label:"입국 심사 받기", run:startControl,
+        /* 국민은 국경을 건너지 않는다. 받을 수 없는 도장에 단추를 두지 않는다 */
+        show:p => !isNational(p),
+        hide:"국민은 입국 심사를 받지 않습니다. 국토 측량으로 기여합니다." };
       /* 선행 조건을 못 갖췄으면 버튼을 띄우지 않는다. 눌러서 실패를 보게 하지 않는다 */
       body.appendChild(!cta.show || cta.show(p)
         ? el("button",{ class:"btn btn-primary", onclick:cta.run, text:cta.label })
@@ -1772,7 +2729,7 @@ function scrMission(root){
       shotList.forEach(s => {
         const img = el("img",{ alt:`${m.stamp} 인증 사진 ${dateStr(new Date(s.at))}` });
         shots.appendChild(img);
-        getShot(s.key).then(b => { if(b) img.src = URL.createObjectURL(b); });
+        getShot(s.key).then(b => { if(b) img.src = URL.createObjectURL(b); else img.remove(); });
       });
       body.appendChild(shots);
     }
